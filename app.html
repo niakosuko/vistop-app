@@ -44,8 +44,6 @@
   .nav-dot{position:absolute;top:-2px;right:-3px;width:8px;height:8px;border-radius:50%;background:#FFB347;border:1.5px solid #050A14;display:none;}
   .nav-item.pending .nav-dot{display:block;}
   .nav-label{font-size:10px;font-weight:700;letter-spacing:0.02em;font-family:var(--font-display);}
-
-  /* ══ PANTALLA DE BLOQUEO ══ */
   #lock-screen{position:fixed;inset:0;z-index:9999;background:var(--bg-base);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px calc(40px + var(--safe-bottom));}
   #lock-screen.oculto{display:none;}
   .lock-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(0,102,255,0.12) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(123,47,255,0.1) 0%,transparent 70%);}
@@ -66,8 +64,6 @@
   .lock-tecla-letras{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-top:2px;}
   .lock-olvide{font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;text-decoration:underline;text-underline-offset:3px;position:relative;z-index:1;}
   .lock-olvide:hover{color:var(--cyan);}
-
-  /* ══ MODAL RECUPERACIÓN ══ */
   .rec-overlay{display:none;position:fixed;inset:0;background:rgba(5,10,20,0.93);backdrop-filter:blur(20px);z-index:10000;align-items:flex-end;justify-content:center;}
   .rec-overlay.abierto{display:flex;}
   .rec-modal{width:100%;max-width:480px;background:#0D1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:28px 28px 0 0;padding:28px 24px 48px;display:flex;flex-direction:column;gap:16px;}
@@ -86,7 +82,6 @@
 <body>
 <div id="bg-glow"></div>
 
-<!-- ══ PANTALLA DE BLOQUEO ══ -->
 <div id="lock-screen">
   <div class="lock-glow"></div>
   <div class="lock-logo">VISTOP</div>
@@ -119,7 +114,6 @@
   <div class="lock-olvide" onclick="abrirRecuperacion()">Olvidé mi PIN</div>
 </div>
 
-<!-- ══ MODAL RECUPERACIÓN ══ -->
 <div class="rec-overlay" id="rec-overlay">
   <div class="rec-modal">
     <div class="rec-handle"></div>
@@ -132,7 +126,6 @@
   </div>
 </div>
 
-<!-- ══ APP ══ -->
 <div id="app-shell" style="display:none;flex-direction:column;width:100%;height:100%;">
   <header id="app-header">
     <div class="header-logo">VISTOP</div>
@@ -180,7 +173,7 @@ var VISTOP = {
 };
 window.VISTOP = VISTOP;
 
-/* ══ HASH SIMPLE — igual en app y titular ══ */
+/* ══ HASH ══ */
 function hashStr(str) {
   return str;
 }
@@ -201,7 +194,7 @@ function getLockLang() {
   return 'es';
 }
 
-/* ══ LÓGICA PIN ENTRADA ══ */
+/* ══ LÓGICA PIN ══ */
 var lockPin='', lockIntentos=0, lockBloqueado=false;
 
 function lockTecla(d) {
@@ -228,12 +221,9 @@ function verificarPinEntrada() {
   var pinHash=null;
   try{ pinHash=localStorage.getItem('vistop_pin_hash'); }catch(e){}
   if(!pinHash) pinHash=VISTOP.get('pin_hash',null);
-
   var inputHash=hashStr(lockPin);
-
   if(inputHash===pinHash) {
-    lockIntentos=0;
-    entrarApp();
+    lockIntentos=0; entrarApp();
   } else {
     lockIntentos++;
     lockPin='';
@@ -256,12 +246,10 @@ function verificarPinEntrada() {
 
 function entrarApp() {
   document.getElementById('lock-screen').classList.add('oculto');
-  var shell=document.getElementById('app-shell');
-  shell.style.display='flex';
+  document.getElementById('app-shell').style.display='flex';
   checkOnboarding();
 }
 
-/* ══ RECUPERACIÓN ══ */
 function abrirRecuperacion() {
   var t=LOCK_T[getLockLang()];
   var pregunta='';
@@ -284,14 +272,17 @@ function verificarRespuesta() {
   var t=LOCK_T[getLockLang()];
   var respuesta=document.getElementById('rec-respuesta').value.trim().toLowerCase();
   if(!respuesta) return;
-  var ansGuardada = localStorage.getItem('vistop_security_answer_hash');
-  if(respuesta === ansGuardada) {
+  var ansHash=null;
+  try{ ansHash=localStorage.getItem('vistop_security_answer_hash'); }catch(e){}
+  if(!ansHash) ansHash=VISTOP.get('security_answer_hash',null);
+  if(hashStr(respuesta)===ansHash) {
     cerrarRecuperacion();
-    localStorage.removeItem('vistop_pin_hash');
+    try{ localStorage.removeItem('vistop_pin_hash'); }catch(e){}
+    VISTOP.remove('pin_hash');
     entrarApp();
     setTimeout(function(){
       var frame=document.getElementById('module-frame');
-      if(frame&&frame.contentWindow){try{frame.contentWindow.postMessage({type:'VISTOP_RESET_PIN'},'*');}catch(e){}}
+      if(frame&&frame.contentWindow){ try{frame.contentWindow.postMessage({type:'VISTOP_RESET_PIN'},'*');}catch(e){} }
     },1200);
   } else {
     document.getElementById('rec-error').textContent=t.rec_error;
@@ -343,6 +334,7 @@ function getTitularName(){var t=VISTOP.get('titular',{});return(t&&t.nombre)?t.n
 
 function updateStepIndicators(){var titular=VISTOP.get('titular',{})||{},calibrado=VISTOP.get('calibrado',false);var ok=!!(titular.nombre&&titular.nombre.trim().length>0);var dotT=document.getElementById('dot-titular'),dotC=document.getElementById('dot-calibrar');var btnT=document.querySelector('[data-module="titular.html"]'),btnC=document.querySelector('[data-module="index.html"]');dotT.style.display=ok?'none':'block';ok?btnT.classList.remove('pending'):btnT.classList.add('pending');dotC.style.display=calibrado?'none':'block';calibrado?btnC.classList.remove('pending'):btnC.classList.add('pending');}
 
+/* ══ MOTOR DE VOZ ══ */
 var SpeechAPI=window.SpeechRecognition||window.webkitSpeechRecognition;
 function initRecognition(){if(!SpeechAPI){setMicStatus('error',NAV_T[getLang()].inactivo);return;}var r=new SpeechAPI();r.continuous=true;r.interimResults=true;r.maxAlternatives=1;r.lang=(VISTOP.get('titular',{})||{}).idioma||'es-AR';r.onstart=function(){setMicStatus('active',NAV_T[getLang()].escuchando);};r.onresult=function(event){if(AppState.isSpeaking)return;for(var i=event.resultIndex;i<event.results.length;i++){var tx=event.results[i][0].transcript.trim(),fin=event.results[i].isFinal;if(tx)broadcastTranscript(tx,fin);}};r.onerror=function(event){if(event.error==='not-allowed'||event.error==='service-not-allowed')setMicStatus('idle',NAV_T[getLang()].inactivo);};r.onend=function(){if(AppState.micStatus==='active'&&!AppState.isSpeaking){try{r.start();}catch(e){}}else if(AppState.micStatus!=='active')setMicStatus('idle',NAV_T[getLang()].inactivo);};AppState.recognition=r;}
 function startListening(){if(!AppState.recognition)initRecognition();if(AppState.micStatus==='active')return;var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';try{AppState.micStatus='active';AppState.recognition.start();}catch(e){}}
@@ -350,7 +342,29 @@ function pauseListening(byAnalysis){if(byAnalysis)AppState.listenWasActive=true;
 function resumeListeningAfterSpeech(){AppState.isSpeaking=false;if(AppState.listenWasActive||AppState.micStatus==='paused'){AppState.listenWasActive=false;setTimeout(function(){startListening();},800);}}
 function toggleMic(){if(AppState.micStatus==='active')pauseListening(false);else startListening();}
 function setMicStatus(status,label){AppState.micStatus=status;var dot=document.getElementById('mic-dot'),lbl=document.getElementById('mic-label'),chip=document.getElementById('mic-status-chip');dot.className='';chip.className='';if(status==='active'){dot.classList.add('active');chip.classList.add('active');}else if(status==='paused')dot.classList.add('paused');else if(status==='error')dot.classList.add('error');lbl.textContent=label;broadcastMicStatus(status);}
-function broadcastTranscript(text,isFinal){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;var speaker;if(!AppState.currentSpeaker||AppState.currentSpeaker==='titular')speaker=getTitularName();else if(AppState.currentSpeaker==='unknown')speaker='?';else speaker=AppState.currentSpeaker;try{frame.contentWindow.postMessage({type:'VISTOP_TRANSCRIPT',text:text,isFinal:isFinal,timestamp:Date.now(),speaker:speaker},'*');}catch(e){}if(isFinal&&text.length>1){VISTOP.append('memoria',{id:Date.now().toString()+Math.random().toString(36).slice(2,6),speaker:speaker,text:text,ts:Date.now()});}}
+
+/* ══ BROADCAST SIN DUPLICADOS ══ */
+var ultimoTextoGuardado = '';
+var ultimoTimestamp = 0;
+
+function broadcastTranscript(text, isFinal) {
+  var frame=document.getElementById('module-frame');
+  if(!frame||!frame.contentWindow) return;
+  var speaker;
+  if(!AppState.currentSpeaker||AppState.currentSpeaker==='titular') speaker=getTitularName();
+  else if(AppState.currentSpeaker==='unknown') speaker='?';
+  else speaker=AppState.currentSpeaker;
+  try{ frame.contentWindow.postMessage({type:'VISTOP_TRANSCRIPT',text:text,isFinal:isFinal,timestamp:Date.now(),speaker:speaker},'*'); }catch(e){}
+  if(isFinal&&text.length>1){
+    var ahora=Date.now();
+    /* No guardar si es el mismo texto en menos de 3 segundos */
+    if(text===ultimoTextoGuardado&&(ahora-ultimoTimestamp)<3000) return;
+    ultimoTextoGuardado=text;
+    ultimoTimestamp=ahora;
+    VISTOP.append('memoria',{id:ahora.toString()+Math.random().toString(36).slice(2,6),speaker:speaker,text:text,ts:ahora});
+  }
+}
+
 function broadcastMicStatus(status){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;try{frame.contentWindow.postMessage({type:'VISTOP_MIC_STATUS',status:status},'*');}catch(e){}}
 function sendLangToFrame(){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;try{frame.contentWindow.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}}
 function identificarHablante(data){if(!data||!data.newSpeaker)return;var ns=data.newSpeaker,ss=data.sessionStart||0;var memoria=VISTOP.get('memoria',[]);var changed=false;memoria.forEach(function(e){if(e.speaker==='?'&&e.ts>=ss){e.speaker=ns;changed=true;}});if(changed)VISTOP.save('memoria',memoria);var inters=VISTOP.get('interlocutores',[]);if(!inters.find(function(p){return p.nombre.toLowerCase()===ns.toLowerCase();})){inters.push({id:Date.now().toString(),nombre:ns,rol:'',tipo:'frecuente',creado:Date.now()});VISTOP.save('interlocutores',inters);}AppState.currentSpeaker=ns;var frame=document.getElementById('module-frame');if(frame&&frame.contentWindow){try{frame.contentWindow.postMessage({type:'VISTOP_SPEAKER_IDENTIFIED',speaker:ns},'*');}catch(e){}}}
