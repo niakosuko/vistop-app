@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050A14">
+<title>VISTOP</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg-base:#050A14; --cyan:#00D4FF; --blue:#0066FF; --violet:#7B2FFF;
+    --text-primary:#FFFFFF; --text-secondary:rgba(255,255,255,0.75);
+    --radius-pill:100px; --nav-h:72px;
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif;
+    --status-idle:rgba(255,255,255,0.3); --status-active:#00D4FF;
+    --status-paused:#7B2FFF; --status-error:#FF4560;
+  }
+  html,body{width:100%;height:100%;background:var(--bg-base);color:var(--text-primary);font-family:var(--font-body);font-size:16px;line-height:1.5;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
+  #app-shell{display:flex;flex-direction:column;width:100%;height:100%;position:relative;}
+  #bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 60% 40% at 15% 10%,rgba(0,102,255,0.18) 0%,transparent 70%),radial-gradient(ellipse 50% 35% at 85% 80%,rgba(123,47,255,0.15) 0%,transparent 70%),radial-gradient(ellipse 40% 30% at 50% 50%,rgba(0,212,255,0.06) 0%,transparent 70%);}
+  #app-header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;padding-top:calc(16px + env(safe-area-inset-top,0px));border-bottom:1px solid rgba(255,255,255,0.1);background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);flex-shrink:0;}
+  .header-logo{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:0.1em;background:linear-gradient(135deg,#00D4FF 0%,#0066FF 50%,#7B2FFF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:brightness(1.3);}
+  #mic-status-chip{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;user-select:none;font-family:var(--font-display);}
+  #mic-status-chip:active{transform:scale(0.96);}
+  #mic-status-chip.active{border-color:rgba(0,212,255,0.5);background:rgba(0,212,255,0.1);color:var(--cyan);box-shadow:0 0 20px rgba(0,212,255,0.15);}
+  #mic-dot{width:8px;height:8px;border-radius:50%;background:var(--status-idle);transition:all 0.3s;flex-shrink:0;}
+  #mic-dot.active{background:var(--status-active);box-shadow:0 0 10px rgba(0,212,255,0.8);animation:pulse-dot 2s ease-in-out infinite;}
+  #mic-dot.paused{background:var(--status-paused);}
+  #mic-dot.error{background:var(--status-error);}
+  @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
+  #module-frame{flex:1;width:100%;border:none;position:relative;z-index:1;background:transparent;min-height:0;}
+  #app-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-around;height:var(--nav-h);padding-bottom:calc(8px + var(--safe-bottom));border-top:1px solid rgba(255,255,255,0.12);background:rgba(10,22,40,0.98);backdrop-filter:blur(24px);flex-shrink:0;}
+  .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:14px;cursor:pointer;transition:all 0.2s;min-width:44px;user-select:none;-webkit-tap-highlight-color:transparent;border:none;background:transparent;color:rgba(255,255,255,0.35);}
+  .nav-item:active{transform:scale(0.92);}
+  .nav-item.active{color:var(--cyan);background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);}
+  .nav-item.pending{color:rgba(255,183,71,0.7);}
+  .nav-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .nav-icon svg{width:22px;height:22px;stroke-width:1.8;}
+  .nav-dot{position:absolute;top:-2px;right:-3px;width:8px;height:8px;border-radius:50%;background:#FFB347;border:1.5px solid #050A14;display:none;}
+  .nav-item.pending .nav-dot{display:block;}
+  .nav-label{font-size:10px;font-weight:700;letter-spacing:0.02em;font-family:var(--font-display);}
+
+  /* ══ PANTALLA DE BLOQUEO ══ */
+  #lock-screen{position:fixed;inset:0;z-index:9999;background:var(--bg-base);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px calc(40px + var(--safe-bottom));}
+  #lock-screen.oculto{display:none;}
+  .lock-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(0,102,255,0.12) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(123,47,255,0.1) 0%,transparent 70%);}
+  .lock-logo{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:0.1em;background:linear-gradient(135deg,#00D4FF 0%,#0066FF 50%,#7B2FFF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:brightness(1.3);margin-bottom:6px;position:relative;z-index:1;}
+  .lock-sub{font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:48px;font-family:var(--font-display);position:relative;z-index:1;}
+  .lock-puntos{display:flex;gap:16px;margin-bottom:48px;position:relative;z-index:1;}
+  .lock-punto{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:transparent;transition:all 0.2s;}
+  .lock-punto.lleno{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 12px rgba(0,212,255,0.6);}
+  .lock-punto.error{background:#FF4560;border-color:#FF4560;animation:shake 0.4s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+  .lock-error-msg{font-size:13px;color:#FF4560;height:20px;margin-bottom:20px;text-align:center;font-weight:600;position:relative;z-index:1;}
+  .lock-teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:280px;margin-bottom:32px;position:relative;z-index:1;}
+  .lock-tecla{height:64px;border-radius:20px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;user-select:none;}
+  .lock-tecla:active{background:rgba(0,212,255,0.15);border-color:rgba(0,212,255,0.4);transform:scale(0.94);}
+  .lock-tecla-vacia{background:transparent;border-color:transparent;pointer-events:none;}
+  .lock-tecla-del{background:rgba(255,255,255,0.04);}
+  .lock-tecla-num{font-family:var(--font-display);font-size:24px;font-weight:700;line-height:1;}
+  .lock-tecla-letras{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-top:2px;}
+  .lock-olvide{font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;text-decoration:underline;text-underline-offset:3px;position:relative;z-index:1;}
+  .lock-olvide:hover{color:var(--cyan);}
+
+  /* ══ MODAL RECUPERACIÓN ══ */
+  .rec-overlay{display:none;position:fixed;inset:0;background:rgba(5,10,20,0.93);backdrop-filter:blur(20px);z-index:10000;align-items:flex-end;justify-content:center;}
+  .rec-overlay.abierto{display:flex;}
+  .rec-modal{width:100%;max-width:480px;background:#0D1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:28px 28px 0 0;padding:28px 24px 48px;display:flex;flex-direction:column;gap:16px;}
+  .rec-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2);margin:0 auto 8px;}
+  .rec-titulo{font-family:var(--font-display);font-size:18px;font-weight:700;text-align:center;}
+  .rec-pregunta{font-size:15px;color:var(--text-secondary);text-align:center;line-height:1.5;padding:12px 16px;background:rgba(255,255,255,0.05);border-radius:14px;border:1px solid rgba(255,255,255,0.1);}
+  .rec-input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:14px;color:#fff;font-family:var(--font-body);font-size:15px;outline:none;}
+  .rec-input:focus{border-color:rgba(0,212,255,0.5);}
+  ::placeholder{color:rgba(255,255,255,0.3);}
+  .rec-error{font-size:13px;color:#FF4560;text-align:center;min-height:18px;}
+  .rec-btn{width:100%;padding:15px;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;font-family:var(--font-display);font-size:15px;font-weight:700;border:none;cursor:pointer;}
+  .rec-btn:active{transform:scale(0.97);}
+  .rec-cancelar{text-align:center;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;padding:8px;}
+</style>
+</head>
+<body>
+<div id="bg-glow"></div>
+
+<!-- ══ PANTALLA DE BLOQUEO ══ -->
+<div id="lock-screen">
+  <div class="lock-glow"></div>
+  <div class="lock-logo">VISTOP</div>
+  <div class="lock-sub" id="lock-subtitulo">Ingresá tu PIN</div>
+  <div class="lock-puntos">
+    <div class="lock-punto" id="lp0"></div>
+    <div class="lock-punto" id="lp1"></div>
+    <div class="lock-punto" id="lp2"></div>
+    <div class="lock-punto" id="lp3"></div>
+    <div class="lock-punto" id="lp4"></div>
+    <div class="lock-punto" id="lp5"></div>
+  </div>
+  <div class="lock-error-msg" id="lock-error"></div>
+  <div class="lock-teclado">
+    <div class="lock-tecla" onclick="lockTecla('1')"><div class="lock-tecla-num">1</div></div>
+    <div class="lock-tecla" onclick="lockTecla('2')"><div class="lock-tecla-num">2</div><div class="lock-tecla-letras">ABC</div></div>
+    <div class="lock-tecla" onclick="lockTecla('3')"><div class="lock-tecla-num">3</div><div class="lock-tecla-letras">DEF</div></div>
+    <div class="lock-tecla" onclick="lockTecla('4')"><div class="lock-tecla-num">4</div><div class="lock-tecla-letras">GHI</div></div>
+    <div class="lock-tecla" onclick="lockTecla('5')"><div class="lock-tecla-num">5</div><div class="lock-tecla-letras">JKL</div></div>
+    <div class="lock-tecla" onclick="lockTecla('6')"><div class="lock-tecla-num">6</div><div class="lock-tecla-letras">MNO</div></div>
+    <div class="lock-tecla" onclick="lockTecla('7')"><div class="lock-tecla-num">7</div><div class="lock-tecla-letras">PQRS</div></div>
+    <div class="lock-tecla" onclick="lockTecla('8')"><div class="lock-tecla-num">8</div><div class="lock-tecla-letras">TUV</div></div>
+    <div class="lock-tecla" onclick="lockTecla('9')"><div class="lock-tecla-num">9</div><div class="lock-tecla-letras">WXYZ</div></div>
+    <div class="lock-tecla lock-tecla-vacia"></div>
+    <div class="lock-tecla" onclick="lockTecla('0')"><div class="lock-tecla-num">0</div></div>
+    <div class="lock-tecla lock-tecla-del" onclick="lockBorrar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+    </div>
+  </div>
+  <div class="lock-olvide" onclick="abrirRecuperacion()">Olvidé mi PIN</div>
+</div>
+
+<!-- ══ MODAL RECUPERACIÓN ══ -->
+<div class="rec-overlay" id="rec-overlay">
+  <div class="rec-modal">
+    <div class="rec-handle"></div>
+    <div class="rec-titulo" id="rec-titulo">Recuperar acceso</div>
+    <div class="rec-pregunta" id="rec-pregunta">—</div>
+    <input type="text" class="rec-input" id="rec-respuesta" placeholder="Tu respuesta...">
+    <div class="rec-error" id="rec-error"></div>
+    <button type="button" class="rec-btn" onclick="verificarRespuesta()">Verificar</button>
+    <div class="rec-cancelar" onclick="cerrarRecuperacion()">Cancelar</div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app-shell" style="display:none;flex-direction:column;width:100%;height:100%;">
+  <header id="app-header">
+    <div class="header-logo">VISTOP</div>
+    <div id="mic-status-chip" onclick="toggleMic()">
+      <div id="mic-dot"></div>
+      <span id="mic-label">Inactivo</span>
+    </div>
+  </header>
+  <iframe id="module-frame" src="titular.html" title="VISTOP" allow="microphone"></iframe>
+  <nav id="app-nav">
+    <button class="nav-item" data-module="titular.html" onclick="loadModule(this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div class="nav-dot" id="dot-titular"></div></div>
+      <span class="nav-label" id="nav-titular">Titular</span>
+    </button>
+    <button class="nav-item" data-module="index.html" onclick="loadModule(this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><div class="nav-dot" id="dot-calibrar"></div></div>
+      <span class="nav-label" id="nav-calibrar">Calibrar</span>
+    </button>
+    <button class="nav-item" data-module="escucha.html" onclick="loadModule(this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+      <span class="nav-label" id="nav-escucha">Escucha</span>
+    </button>
+    <button class="nav-item" data-module="interlocutores.html" onclick="loadModule(this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <span class="nav-label" id="nav-inter">Personas</span>
+    </button>
+    <button class="nav-item" data-module="memoria.html" onclick="loadModule(this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <span class="nav-label" id="nav-memoria">Memoria</span>
+    </button>
+    <button class="nav-item" data-module="analisis.html" onclick="loadModule(this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <span class="nav-label" id="nav-analisis">Análisis</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+/* ══ STORAGE ══ */
+var VISTOP = {
+  save:   function(k,v){ try{ localStorage.setItem('vistop_'+k,JSON.stringify(v)); }catch(e){} },
+  get:    function(k,fb){ try{ var r=localStorage.getItem('vistop_'+k); return r!==null?JSON.parse(r):(fb!==undefined?fb:null); }catch(e){ return fb!==undefined?fb:null; } },
+  remove: function(k){ try{ localStorage.removeItem('vistop_'+k); }catch(e){} },
+  append: function(k,item){ var a=this.get(k,[])||[]; a.push(item); this.save(k,a); }
+};
+window.VISTOP = VISTOP;
+
+/* ══ HASH SIMPLE — igual en app y titular ══ */
+function hashStr(str) {
+  return str;
+}
+
+/* ══ TEXTOS LOCK ══ */
+var LOCK_T = {
+  es:{ sub:'Ingresá tu PIN', error_intento:'PIN incorrecto. Intentos restantes: ', bloqueado:'Demasiados intentos. Esperá 30 segundos.', rec_titulo:'Recuperar acceso', rec_error:'Respuesta incorrecta', rec_ph:'Tu respuesta...' },
+  en:{ sub:'Enter your PIN', error_intento:'Wrong PIN. Attempts left: ', bloqueado:'Too many attempts. Wait 30 seconds.', rec_titulo:'Recover access', rec_error:'Wrong answer', rec_ph:'Your answer...' },
+  pt:{ sub:'Digite seu PIN', error_intento:'PIN incorreto. Tentativas restantes: ', bloqueado:'Muitas tentativas. Aguarde 30 segundos.', rec_titulo:'Recuperar acesso', rec_error:'Resposta incorreta', rec_ph:'Sua resposta...' },
+  fr:{ sub:'Entrez votre PIN', error_intento:'PIN incorrect. Tentatives restantes : ', bloqueado:'Trop de tentatives. Attendez 30 secondes.', rec_titulo:"Récupérer l'accès", rec_error:'Réponse incorrecte', rec_ph:'Votre réponse...' },
+  de:{ sub:'PIN eingeben', error_intento:'Falscher PIN. Versuche übrig: ', bloqueado:'Zu viele Versuche. Warten Sie 30 Sekunden.', rec_titulo:'Zugang wiederherstellen', rec_error:'Falsche Antwort', rec_ph:'Ihre Antwort...' },
+  it:{ sub:'Inserisci il PIN', error_intento:'PIN errato. Tentativi rimasti: ', bloqueado:'Troppi tentativi. Attendi 30 secondi.', rec_titulo:"Recupera l'accesso", rec_error:'Risposta errata', rec_ph:'La tua risposta...' },
+  ru:{ sub:'Введите PIN', error_intento:'Неверный PIN. Осталось попыток: ', bloqueado:'Слишком много попыток. Подождите 30 секунд.', rec_titulo:'Восстановить доступ', rec_error:'Неверный ответ', rec_ph:'Ваш ответ...' },
+};
+
+function getLockLang() {
+  try { var r=localStorage.getItem('vistop_titular'); if(r){var o=JSON.parse(r),i=o.idioma||'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';} }catch(e){}
+  return 'es';
+}
+
+/* ══ LÓGICA PIN ENTRADA ══ */
+var lockPin='', lockIntentos=0, lockBloqueado=false;
+
+function lockTecla(d) {
+  if(lockBloqueado||lockPin.length>=6) return;
+  lockPin+=d; actualizarPuntosLock();
+  if(lockPin.length===6) setTimeout(verificarPinEntrada,150);
+}
+
+function lockBorrar() {
+  if(lockBloqueado) return;
+  lockPin=lockPin.slice(0,-1); actualizarPuntosLock();
+  document.getElementById('lock-error').textContent='';
+}
+
+function actualizarPuntosLock() {
+  for(var i=0;i<6;i++){
+    var p=document.getElementById('lp'+i);
+    p.classList.toggle('lleno', i<lockPin.length);
+    p.classList.remove('error');
+  }
+}
+
+function verificarPinEntrada() {
+  var pinHash=null;
+  try{ pinHash=localStorage.getItem('vistop_pin_hash'); }catch(e){}
+  if(!pinHash) pinHash=VISTOP.get('pin_hash',null);
+
+  var inputHash=hashStr(lockPin);
+
+  if(inputHash===pinHash) {
+    lockIntentos=0;
+    entrarApp();
+  } else {
+    lockIntentos++;
+    lockPin='';
+    for(var i=0;i<6;i++){
+      document.getElementById('lp'+i).classList.remove('lleno');
+      document.getElementById('lp'+i).classList.add('error');
+    }
+    var t=LOCK_T[getLockLang()];
+    var restantes=5-lockIntentos;
+    if(restantes<=0){
+      lockBloqueado=true;
+      document.getElementById('lock-error').textContent=t.bloqueado;
+      setTimeout(function(){lockBloqueado=false;lockIntentos=0;document.getElementById('lock-error').textContent='';for(var i=0;i<6;i++)document.getElementById('lp'+i).classList.remove('error');},30000);
+    } else {
+      document.getElementById('lock-error').textContent=t.error_intento+restantes;
+    }
+    setTimeout(function(){for(var i=0;i<6;i++)document.getElementById('lp'+i).classList.remove('error');},500);
+  }
+}
+
+function entrarApp() {
+  document.getElementById('lock-screen').classList.add('oculto');
+  var shell=document.getElementById('app-shell');
+  shell.style.display='flex';
+  checkOnboarding();
+}
+
+/* ══ RECUPERACIÓN ══ */
+function abrirRecuperacion() {
+  var t=LOCK_T[getLockLang()];
+  var pregunta='';
+  try{ pregunta=localStorage.getItem('vistop_security_question')||''; }catch(e){}
+  if(!pregunta) pregunta=VISTOP.get('security_question','')||'';
+  document.getElementById('rec-titulo').textContent=t.rec_titulo;
+  document.getElementById('rec-pregunta').textContent=pregunta||'—';
+  document.getElementById('rec-respuesta').placeholder=t.rec_ph;
+  document.getElementById('rec-respuesta').value='';
+  document.getElementById('rec-error').textContent='';
+  document.getElementById('rec-overlay').classList.add('abierto');
+  setTimeout(function(){document.getElementById('rec-respuesta').focus();},300);
+}
+
+function cerrarRecuperacion() {
+  document.getElementById('rec-overlay').classList.remove('abierto');
+}
+
+function verificarRespuesta() {
+  var t=LOCK_T[getLockLang()];
+  var respuesta=document.getElementById('rec-respuesta').value.trim().toLowerCase();
+  if(!respuesta) return;
+  var ansGuardada = localStorage.getItem('vistop_security_answer_hash');
+  if(respuesta === ansGuardada) {
+    cerrarRecuperacion();
+    localStorage.removeItem('vistop_pin_hash');
+    entrarApp();
+    setTimeout(function(){
+      var frame=document.getElementById('module-frame');
+      if(frame&&frame.contentWindow){try{frame.contentWindow.postMessage({type:'VISTOP_RESET_PIN'},'*');}catch(e){}}
+    },1200);
+  } else {
+    document.getElementById('rec-error').textContent=t.rec_error;
+    document.getElementById('rec-respuesta').value='';
+  }
+}
+
+/* ══ TECLADO FÍSICO ══ */
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('lock-screen').classList.contains('oculto')) return;
+  if(document.getElementById('rec-overlay').classList.contains('abierto')) return;
+  if(e.key>='0'&&e.key<='9') lockTecla(e.key);
+  else if(e.key==='Backspace') lockBorrar();
+  else if(e.key==='Enter'&&lockPin.length===6) verificarPinEntrada();
+});
+
+/* ══ ARRANQUE ══ */
+function initLock() {
+  var t=LOCK_T[getLockLang()];
+  document.getElementById('lock-subtitulo').textContent=t.sub;
+  var pinHash=null;
+  try{ pinHash=localStorage.getItem('vistop_pin_hash'); }catch(e){}
+  if(!pinHash) pinHash=VISTOP.get('pin_hash',null);
+  if(!pinHash){
+    document.getElementById('lock-screen').classList.add('oculto');
+    document.getElementById('app-shell').style.display='flex';
+    checkOnboarding();
+  }
+}
+
+/* ══ IDIOMAS NAV ══ */
+var NAV_T={
+  es:{titular:'Titular',calibrar:'Calibrar',escucha:'Escucha',inter:'Personas',memoria:'Memoria',analisis:'Análisis',inactivo:'Inactivo',escuchando:'Escuchando',pausado:'Pausado'},
+  en:{titular:'Profile',calibrar:'Calibrate',escucha:'Listen',inter:'People',memoria:'Memory',analisis:'Analysis',inactivo:'Inactive',escuchando:'Listening',pausado:'Paused'},
+  pt:{titular:'Perfil',calibrar:'Calibrar',escucha:'Escuta',inter:'Pessoas',memoria:'Memória',analisis:'Análise',inactivo:'Inativo',escuchando:'Escutando',pausado:'Pausado'},
+  fr:{titular:'Profil',calibrar:'Calibrer',escucha:'Écoute',inter:'Personnes',memoria:'Mémoire',analisis:'Analyse',inactivo:'Inactif',escuchando:'En écoute',pausado:'En pause'},
+  de:{titular:'Profil',calibrar:'Kalibrieren',escucha:'Zuhören',inter:'Personen',memoria:'Speicher',analisis:'Analyse',inactivo:'Inaktiv',escuchando:'Hört zu',pausado:'Pausiert'},
+  it:{titular:'Profilo',calibrar:'Calibra',escucha:'Ascolto',inter:'Persone',memoria:'Memoria',analisis:'Analisi',inactivo:'Inattivo',escuchando:'In ascolto',pausado:'In pausa'},
+  ru:{titular:'Профиль',calibrar:'Калибровка',escucha:'Слушать',inter:'Люди',memoria:'Память',analisis:'Анализ',inactivo:'Неактивен',escuchando:'Слушаю',pausado:'Пауза'},
+};
+
+function getLang(){var t=VISTOP.get('titular',{});var i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
+
+function applyNav(){var t=NAV_T[getLang()];document.getElementById('nav-titular').textContent=t.titular;document.getElementById('nav-calibrar').textContent=t.calibrar;document.getElementById('nav-escucha').textContent=t.escucha;document.getElementById('nav-inter').textContent=t.inter;document.getElementById('nav-memoria').textContent=t.memoria;document.getElementById('nav-analisis').textContent=t.analisis;var lbl=document.getElementById('mic-label');if(lbl.textContent!==t.escuchando&&lbl.textContent!==t.pausado)lbl.textContent=t.inactivo;}
+
+var AppState={micStatus:'idle',listenWasActive:false,recognition:null,currentModule:'titular.html',isSpeaking:false,currentSpeaker:'titular'};
+window.AppState=AppState;
+function getTitularName(){var t=VISTOP.get('titular',{});return(t&&t.nombre)?t.nombre.split(' ')[0]:'Titular';}
+
+function updateStepIndicators(){var titular=VISTOP.get('titular',{})||{},calibrado=VISTOP.get('calibrado',false);var ok=!!(titular.nombre&&titular.nombre.trim().length>0);var dotT=document.getElementById('dot-titular'),dotC=document.getElementById('dot-calibrar');var btnT=document.querySelector('[data-module="titular.html"]'),btnC=document.querySelector('[data-module="index.html"]');dotT.style.display=ok?'none':'block';ok?btnT.classList.remove('pending'):btnT.classList.add('pending');dotC.style.display=calibrado?'none':'block';calibrado?btnC.classList.remove('pending'):btnC.classList.add('pending');}
+
+var SpeechAPI=window.SpeechRecognition||window.webkitSpeechRecognition;
+function initRecognition(){if(!SpeechAPI){setMicStatus('error',NAV_T[getLang()].inactivo);return;}var r=new SpeechAPI();r.continuous=true;r.interimResults=true;r.maxAlternatives=1;r.lang=(VISTOP.get('titular',{})||{}).idioma||'es-AR';r.onstart=function(){setMicStatus('active',NAV_T[getLang()].escuchando);};r.onresult=function(event){if(AppState.isSpeaking)return;for(var i=event.resultIndex;i<event.results.length;i++){var tx=event.results[i][0].transcript.trim(),fin=event.results[i].isFinal;if(tx)broadcastTranscript(tx,fin);}};r.onerror=function(event){if(event.error==='not-allowed'||event.error==='service-not-allowed')setMicStatus('idle',NAV_T[getLang()].inactivo);};r.onend=function(){if(AppState.micStatus==='active'&&!AppState.isSpeaking){try{r.start();}catch(e){}}else if(AppState.micStatus!=='active')setMicStatus('idle',NAV_T[getLang()].inactivo);};AppState.recognition=r;}
+function startListening(){if(!AppState.recognition)initRecognition();if(AppState.micStatus==='active')return;var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';try{AppState.micStatus='active';AppState.recognition.start();}catch(e){}}
+function pauseListening(byAnalysis){if(byAnalysis)AppState.listenWasActive=true;AppState.micStatus='paused';setMicStatus('paused',NAV_T[getLang()].pausado);try{if(AppState.recognition)AppState.recognition.stop();}catch(e){}}
+function resumeListeningAfterSpeech(){AppState.isSpeaking=false;if(AppState.listenWasActive||AppState.micStatus==='paused'){AppState.listenWasActive=false;setTimeout(function(){startListening();},800);}}
+function toggleMic(){if(AppState.micStatus==='active')pauseListening(false);else startListening();}
+function setMicStatus(status,label){AppState.micStatus=status;var dot=document.getElementById('mic-dot'),lbl=document.getElementById('mic-label'),chip=document.getElementById('mic-status-chip');dot.className='';chip.className='';if(status==='active'){dot.classList.add('active');chip.classList.add('active');}else if(status==='paused')dot.classList.add('paused');else if(status==='error')dot.classList.add('error');lbl.textContent=label;broadcastMicStatus(status);}
+function broadcastTranscript(text,isFinal){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;var speaker;if(!AppState.currentSpeaker||AppState.currentSpeaker==='titular')speaker=getTitularName();else if(AppState.currentSpeaker==='unknown')speaker='?';else speaker=AppState.currentSpeaker;try{frame.contentWindow.postMessage({type:'VISTOP_TRANSCRIPT',text:text,isFinal:isFinal,timestamp:Date.now(),speaker:speaker},'*');}catch(e){}if(isFinal&&text.length>1){VISTOP.append('memoria',{id:Date.now().toString()+Math.random().toString(36).slice(2,6),speaker:speaker,text:text,ts:Date.now()});}}
+function broadcastMicStatus(status){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;try{frame.contentWindow.postMessage({type:'VISTOP_MIC_STATUS',status:status},'*');}catch(e){}}
+function sendLangToFrame(){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;try{frame.contentWindow.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}}
+function identificarHablante(data){if(!data||!data.newSpeaker)return;var ns=data.newSpeaker,ss=data.sessionStart||0;var memoria=VISTOP.get('memoria',[]);var changed=false;memoria.forEach(function(e){if(e.speaker==='?'&&e.ts>=ss){e.speaker=ns;changed=true;}});if(changed)VISTOP.save('memoria',memoria);var inters=VISTOP.get('interlocutores',[]);if(!inters.find(function(p){return p.nombre.toLowerCase()===ns.toLowerCase();})){inters.push({id:Date.now().toString(),nombre:ns,rol:'',tipo:'frecuente',creado:Date.now()});VISTOP.save('interlocutores',inters);}AppState.currentSpeaker=ns;var frame=document.getElementById('module-frame');if(frame&&frame.contentWindow){try{frame.contentWindow.postMessage({type:'VISTOP_SPEAKER_IDENTIFIED',speaker:ns},'*');}catch(e){}}}
+
+window.addEventListener('message',function(event){
+  var msg=event.data||{},type=msg.type,data=msg.data;
+  if(type==='VISTOP_START_MIC') startListening();
+  else if(type==='VISTOP_PAUSE_MIC') pauseListening(data&&data.byAnalysis);
+  else if(type==='VISTOP_RESUME_MIC') resumeListeningAfterSpeech();
+  else if(type==='VISTOP_SPEAKING_START'){AppState.isSpeaking=true;pauseListening(true);}
+  else if(type==='VISTOP_SPEAKING_END'){AppState.isSpeaking=false;resumeListeningAfterSpeech();}
+  else if(type==='VISTOP_SET_SPEAKER') AppState.currentSpeaker=(data&&data.speaker)?data.speaker:'titular';
+  else if(type==='VISTOP_IDENTIFY_SPEAKER') identificarHablante(data);
+  else if(type==='VISTOP_LANG_CHANGE'){applyNav();updateStepIndicators();sendLangToFrame();var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';}
+  else if(type==='VISTOP_TITULAR_SAVED'){updateStepIndicators();var b=document.querySelector('[data-module="index.html"]');if(b)loadModule(b);}
+  else if(type==='VISTOP_CALIBRADO'){updateStepIndicators();var b=document.querySelector('[data-module="escucha.html"]');if(b)loadModule(b);initRecognition();setMicStatus('idle',NAV_T[getLang()].inactivo);}
+  else if(type==='VISTOP_NAV'){if(data&&data.module){var b=document.querySelector('[data-module="'+data.module+'"]');if(b)loadModule(b);}}
+});
+
+function loadModule(btn){if(!btn)return;var module=btn.dataset.module;if(!module)return;document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});btn.classList.add('active');AppState.currentModule=module;var frame=document.getElementById('module-frame');frame.onload=function(){sendLangToFrame();};frame.src=module;if(module!=='escucha.html')AppState.currentSpeaker='titular';}
+function syncNav(module){document.querySelectorAll('.nav-item').forEach(function(btn){btn.classList.toggle('active',btn.dataset.module===module);});}
+window.pauseListening=pauseListening;window.resumeListeningAfterSpeech=resumeListeningAfterSpeech;window.startListening=startListening;window.toggleMic=toggleMic;window.initRecognition=initRecognition;
+
+function checkOnboarding(){
+  applyNav();updateStepIndicators();
+  var titular=VISTOP.get('titular',{})||{},calibrado=VISTOP.get('calibrado',false);
+  var ok=!!(titular.nombre&&titular.nombre.trim().length>0);
+  var frame=document.getElementById('module-frame');
+  if(!ok){frame.onload=function(){sendLangToFrame();};frame.src='titular.html';syncNav('titular.html');AppState.currentModule='titular.html';}
+  else if(!calibrado){frame.onload=function(){sendLangToFrame();};frame.src='index.html';syncNav('index.html');AppState.currentModule='index.html';}
+  else{frame.onload=function(){sendLangToFrame();initRecognition();setMicStatus('idle',NAV_T[getLang()].inactivo);};frame.src='escucha.html';syncNav('escucha.html');AppState.currentModule='escucha.html';}
+}
+
+document.addEventListener('DOMContentLoaded',function(){ initLock(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VISTOP – Titular</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root { --bg:#050A14; --bg-input:rgba(255,255,255,0.08); --border:rgba(255,255,255,0.15); --border-focus:rgba(0,212,255,0.6); --cyan:#00D4FF; --blue:#0066FF; --text-primary:#FFFFFF; --text-secondary:rgba(255,255,255,0.75); --text-muted:rgba(255,255,255,0.45); --radius-card:24px; --radius-pill:100px; --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:16px;line-height:1.5;overflow-y:auto;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
+  .screen{padding:20px 20px 80px;}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .top-title{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:0.06em;text-transform:uppercase;}
+  .save-btn{padding:10px 24px;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;font-family:var(--font-display);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(0,212,255,0.25);}
+  .save-btn:active{transform:scale(0.95);}
+  .welcome-banner{background:linear-gradient(135deg,rgba(0,212,255,0.1),rgba(123,47,255,0.1));border:1px solid rgba(0,212,255,0.2);border-radius:var(--radius-card);padding:20px;margin-bottom:24px;text-align:center;}
+  .welcome-icon{font-size:32px;margin-bottom:8px;}
+  .welcome-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:6px;}
+  .welcome-body{font-size:13px;color:var(--text-secondary);line-height:1.6;}
+  .welcome-step{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 14px;background:rgba(255,255,255,0.06);border-radius:var(--radius-pill);font-size:12px;color:var(--text-muted);font-family:var(--font-display);font-weight:600;}
+  .lang-first{background:rgba(255,255,255,0.05);border:1px solid rgba(0,212,255,0.25);border-radius:var(--radius-card);padding:18px 20px;margin-bottom:24px;}
+  .lang-first-label{font-size:11px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;}
+  .lang-select{width:100%;padding:14px 16px;background:var(--bg-input);border:1.5px solid rgba(0,212,255,0.3);border-radius:14px;color:var(--text-primary);font-family:var(--font-body);font-size:16px;font-weight:600;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;cursor:pointer;}
+  .lang-select option{background:#0D1628;color:#fff;}
+  .avatar-row{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-card);}
+  .avatar-circle{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(0,212,255,0.25),rgba(123,47,255,0.25));border:1.5px solid rgba(0,212,255,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--cyan);}
+  .avatar-name{font-family:var(--font-display);font-size:18px;font-weight:700;}
+  .avatar-sub{font-size:13px;color:var(--text-secondary);margin-top:3px;}
+  .section{margin-bottom:28px;}
+  .section-label{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:12px;}
+  .field{margin-bottom:12px;}
+  .field-label{font-size:13px;color:var(--text-secondary);margin-bottom:7px;font-weight:500;}
+  .field input,.field select{width:100%;padding:14px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:14px;color:var(--text-primary);font-family:var(--font-body);font-size:15px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;}
+  .field input:focus,.field select:focus{border-color:var(--border-focus);}
+  .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;cursor:pointer;}
+  .field select option{background:#0D1628;color:#fff;}
+  ::placeholder{color:rgba(255,255,255,0.3);}
+  .zodiac-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(123,47,255,0.15);border:1px solid rgba(123,47,255,0.4);border-radius:var(--radius-pill);font-size:14px;color:#C89FFF;font-weight:600;margin-top:10px;}
+  .items-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+  .item-row{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:14px;transition:border-color 0.2s;}
+  .item-row:focus-within{border-color:var(--border-focus);}
+  .item-input{flex:1;background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:15px;padding:0;}
+  .item-delete{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.07);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:18px;flex-shrink:0;}
+  .item-delete:active{background:rgba(255,69,96,0.2);color:#FF4560;}
+  .add-item-btn{display:flex;align-items:center;gap:8px;padding:13px 16px;background:transparent;border:1px dashed rgba(255,255,255,0.2);border-radius:14px;color:rgba(255,255,255,0.5);font-family:var(--font-body);font-size:14px;cursor:pointer;transition:all 0.2s;width:100%;}
+  .add-item-btn:active{background:rgba(255,255,255,0.05);border-color:var(--border-focus);color:var(--cyan);}
+  .security-box{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;}
+  .security-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .security-titulo{font-family:var(--font-display);font-size:14px;font-weight:700;}
+  .security-sub{font-size:12px;color:var(--text-muted);margin-top:3px;}
+  .pin-badge{padding:4px 12px;border-radius:100px;background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.3);font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--cyan);flex-shrink:0;}
+  .btn-pin{width:100%;padding:14px;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;font-family:var(--font-display);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(0,212,255,0.2);}
+  .btn-pin:active{transform:scale(0.97);}
+  .pin-overlay{display:none;position:fixed;inset:0;background:rgba(5,10,20,0.93);backdrop-filter:blur(20px);z-index:100;align-items:flex-end;justify-content:center;}
+  .pin-overlay.abierto{display:flex;}
+  .pin-modal{width:100%;max-width:480px;background:#0D1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:28px 28px 0 0;padding:28px 24px 48px;display:flex;flex-direction:column;gap:14px;}
+  .pin-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2);margin:0 auto 6px;}
+  .pin-titulo{font-family:var(--font-display);font-size:18px;font-weight:700;text-align:center;}
+  .pin-paso{font-size:13px;color:rgba(255,255,255,0.45);text-align:center;}
+  .pin-puntos{display:flex;gap:14px;justify-content:center;margin:4px 0;}
+  .pin-punto{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:transparent;transition:all 0.2s;}
+  .pin-punto.lleno{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 10px rgba(0,212,255,0.5);}
+  .pin-error{font-size:13px;color:#FF4560;text-align:center;min-height:18px;}
+  .pin-teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .pin-tecla{height:56px;border-radius:16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--font-display);font-size:22px;font-weight:700;transition:all 0.15s;user-select:none;}
+  .pin-tecla:active{background:rgba(0,212,255,0.15);border-color:rgba(0,212,255,0.4);transform:scale(0.94);}
+  .pin-tecla-vacia{background:transparent;border-color:transparent;pointer-events:none;}
+  .pin-tecla-del{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);}
+  .sq-bloque{display:none;flex-direction:column;gap:12px;}
+  .sq-bloque.visible{display:flex;}
+  .sq-etiqueta{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.5;}
+  .sq-select{width:100%;padding:13px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:14px;color:#fff;font-family:var(--font-body);font-size:14px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer;}
+  .sq-select option{background:#0D1A2E;color:#fff;}
+  .sq-respuesta{width:100%;padding:13px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:14px;color:#fff;font-family:var(--font-body);font-size:14px;outline:none;}
+  .sq-respuesta:focus{border-color:rgba(0,212,255,0.5);}
+  .btn-guardar-pin{width:100%;padding:14px;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;font-family:var(--font-display);font-size:14px;font-weight:700;border:none;cursor:pointer;}
+  .btn-guardar-pin:active{transform:scale(0.97);}
+  .pin-cancelar{text-align:center;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;padding:4px;}
+  #toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.4);border-radius:var(--radius-pill);padding:12px 24px;font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--cyan);opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:200;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <div class="top-bar">
+    <div class="top-title" id="tit-title">Titular</div>
+    <button type="button" class="save-btn" id="save-btn" onclick="guardar()">Guardar</button>
+  </div>
+
+  <div class="welcome-banner" id="welcome-banner" style="display:none;">
+    <div class="welcome-icon">👋</div>
+    <div class="welcome-title" id="welcome-title">Bienvenido a VISTOP</div>
+    <div class="welcome-body" id="welcome-body">Elegí tu idioma y completá tu perfil para comenzar.</div>
+    <div class="welcome-step"><span id="welcome-step-text">Paso 1 de 3</span></div>
+  </div>
+
+  <div class="lang-first">
+    <div class="lang-first-label" id="lang-first-label">🌐 Idioma de la app</div>
+    <select class="lang-select" id="idioma" onchange="onIdiomaChange()">
+      <option value="es-AR">🇦🇷 Español</option>
+      <option value="en-US">🇺🇸 English</option>
+      <option value="pt-BR">🇧🇷 Português</option>
+      <option value="fr-FR">🇫🇷 Français</option>
+      <option value="de-DE">🇩🇪 Deutsch</option>
+      <option value="it-IT">🇮🇹 Italiano</option>
+      <option value="ru-RU">🇷🇺 Русский</option>
+    </select>
+  </div>
+
+  <div class="avatar-row">
+    <div class="avatar-circle" id="avatar-initials">?</div>
+    <div>
+      <div class="avatar-name" id="avatar-name">Tu nombre</div>
+      <div class="avatar-sub" id="avatar-sub">Completá tu perfil</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label" id="sec-personal">Datos personales</div>
+    <div class="field"><div class="field-label" id="lbl-nombre">Nombre completo</div><input type="text" id="nombre" oninput="actualizarAvatar()"></div>
+    <div class="field"><div class="field-label" id="lbl-mail">Mail principal</div><input type="email" id="mail"></div>
+    <div class="field">
+      <div class="field-label" id="lbl-fecha">Fecha de nacimiento</div>
+      <input type="date" id="fecha_nacimiento" onchange="actualizarSigno()">
+      <div id="zodiac-wrap" style="display:none;"><div class="zodiac-chip"><span id="zodiac-symbol">♈</span> <span id="zodiac-name">Aries</span></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label" id="sec-spirit">Espiritualidad</div>
+    <div class="field">
+      <div class="field-label" id="lbl-religion">Religión / espiritualidad (opcional)</div>
+      <select id="religion">
+        <option value="" id="rel-none">Sin especificar</option>
+        <option value="cristiano" id="rel-cristiano">Cristiano / Católico</option>
+        <option value="evangelico" id="rel-evangelico">Evangélico</option>
+        <option value="judio" id="rel-judio">Judío</option>
+        <option value="musulman" id="rel-musulman">Musulmán</option>
+        <option value="budista" id="rel-budista">Budista</option>
+        <option value="hinduista" id="rel-hinduista">Hinduista</option>
+        <option value="espiritualidad" id="rel-espir">Espiritualidad propia</option>
+        <option value="agnostico" id="rel-agnostico">Agnóstico</option>
+        <option value="ateo" id="rel-ateo">Ateo</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label" id="sec-obj">Objetivos</div>
+    <div class="items-list" id="objetivos-list"></div>
+    <button type="button" class="add-item-btn" onclick="agregarItem('objetivos')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span id="lbl-add-obj">Agregar objetivo</span>
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="section-label" id="sec-metas">Metas</div>
+    <div class="items-list" id="metas-list"></div>
+    <button type="button" class="add-item-btn" onclick="agregarItem('metas')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span id="lbl-add-meta">Agregar meta</span>
+    </button>
+  </div>
+
+  <!-- SEGURIDAD — solo Configurar/Cambiar, sin Eliminar -->
+  <div class="section">
+    <div class="section-label" id="sec-security">Seguridad</div>
+    <div class="security-box">
+      <div class="security-top">
+        <div>
+          <div class="security-titulo" id="pin-titulo-label">PIN de acceso</div>
+          <div class="security-sub" id="pin-sub-label">Protegé tu app con un PIN de 6 dígitos</div>
+        </div>
+        <div class="pin-badge" id="pin-badge-activo" style="display:none;">ACTIVO</div>
+      </div>
+      <button type="button" class="btn-pin" id="btn-configurar-pin" onclick="abrirModalPin()">Configurar PIN</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- MODAL PIN -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-modal">
+    <div class="pin-handle"></div>
+    <div class="pin-titulo" id="pin-modal-titulo">Nuevo PIN</div>
+    <div class="pin-paso" id="pin-modal-paso">Paso 1 de 3 — Ingresá tu nuevo PIN</div>
+    <div class="pin-puntos">
+      <div class="pin-punto" id="pp0"></div>
+      <div class="pin-punto" id="pp1"></div>
+      <div class="pin-punto" id="pp2"></div>
+      <div class="pin-punto" id="pp3"></div>
+      <div class="pin-punto" id="pp4"></div>
+      <div class="pin-punto" id="pp5"></div>
+    </div>
+    <div class="pin-error" id="pin-modal-error"></div>
+    <div class="pin-teclado">
+      <div class="pin-tecla" onclick="pinTecla('1')">1</div>
+      <div class="pin-tecla" onclick="pinTecla('2')">2</div>
+      <div class="pin-tecla" onclick="pinTecla('3')">3</div>
+      <div class="pin-tecla" onclick="pinTecla('4')">4</div>
+      <div class="pin-tecla" onclick="pinTecla('5')">5</div>
+      <div class="pin-tecla" onclick="pinTecla('6')">6</div>
+      <div class="pin-tecla" onclick="pinTecla('7')">7</div>
+      <div class="pin-tecla" onclick="pinTecla('8')">8</div>
+      <div class="pin-tecla" onclick="pinTecla('9')">9</div>
+      <div class="pin-tecla pin-tecla-vacia"></div>
+      <div class="pin-tecla" onclick="pinTecla('0')">0</div>
+      <div class="pin-tecla pin-tecla-del" onclick="pinBorrar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </div>
+    </div>
+    <div class="sq-bloque" id="sq-bloque">
+      <div class="sq-etiqueta" id="sq-etiqueta">Pregunta de seguridad — si olvidás el PIN la usás para recuperar el acceso</div>
+      <select class="sq-select" id="sq-pregunta">
+        <option value="">Elegí una pregunta...</option>
+        <option value="mascota">¿Cómo se llamaba tu primera mascota?</option>
+        <option value="ciudad">¿En qué ciudad naciste?</option>
+        <option value="madre">¿Cuál es el apellido de soltera de tu madre?</option>
+        <option value="amigo">¿Cómo se llama tu mejor amigo de la infancia?</option>
+        <option value="escuela">¿Cómo se llamaba tu primera escuela?</option>
+      </select>
+      <input type="text" class="sq-respuesta" id="sq-respuesta" placeholder="Tu respuesta...">
+      <button type="button" class="btn-guardar-pin" onclick="guardarPinFinal()" id="btn-guardar-pin-final">Guardar PIN</button>
+    </div>
+    <div class="pin-cancelar" onclick="cerrarModalPin()" id="pin-cancelar-txt">Cancelar</div>
+  </div>
+</div>
+
+<script>
+/* ══ STORAGE ══ */
+var VISTOP_LOCAL = {
+  save:   function(k,v){ try{ localStorage.setItem('vistop_'+k,JSON.stringify(v)); }catch(e){} },
+  get:    function(k,fb){ try{ var r=localStorage.getItem('vistop_'+k); return r!==null?JSON.parse(r):(fb!==undefined?fb:null); }catch(e){ return fb!==undefined?fb:null; } },
+  remove: function(k){ try{ localStorage.removeItem('vistop_'+k); }catch(e){} }
+};
+var VISTOP = VISTOP_LOCAL;
+try{ if(window.parent&&window.parent.VISTOP&&typeof window.parent.VISTOP.get==='function'){VISTOP=window.parent.VISTOP;if(!VISTOP.remove)VISTOP.remove=VISTOP_LOCAL.remove;} }catch(e){}
+
+/* ══ HASH SIMPLE — igual que app.html ══ */
+function hashStr(str) {
+  return str;
+}
+
+/* ══ TRADUCCIONES ══ */
+var T = {
+  es:{ title:'Titular', save:'Guardar', lang_label:'🌐 Idioma de la app', welcome_title:'Bienvenido a VISTOP', welcome_body:'Elegí tu idioma y completá tu perfil para comenzar.', step:'Paso 1 de 3', name_ph:'Tu nombre', profile_ph:'Completá tu perfil', nombre_ph:'Tu nombre completo', mail_ph:'tu@mail.com', sec_personal:'Datos personales', sec_spirit:'Espiritualidad', lbl_nombre:'Nombre completo', lbl_mail:'Mail principal', lbl_fecha:'Fecha de nacimiento', lbl_religion:'Religión / espiritualidad (opcional)', sec_obj:'Objetivos', sec_metas:'Metas', add_obj:'Agregar objetivo', add_meta:'Agregar meta', obj_ph:'Escribí un objetivo...', meta_ph:'Escribí una meta...', saved:'Perfil guardado ✓', sec_security:'Seguridad', pin_titulo:'PIN de acceso', pin_sub:'Protegé tu app con un PIN de 6 dígitos', pin_activo:'ACTIVO', btn_config:'Configurar PIN', btn_cambiar:'Cambiar PIN', pin_modal_titulo:'Nuevo PIN', paso1:'Paso 1 de 3 — Ingresá tu nuevo PIN', paso2:'Paso 2 de 3 — Confirmá tu PIN', paso3:'Paso 3 de 3 — Pregunta de recuperación', no_coincide:'Los PINs no coinciden. Intentá de nuevo.', sq_etiqueta:'Pregunta de seguridad — si olvidás el PIN la usás para recuperar el acceso', sq_ph:'Tu respuesta...', btn_guardar_pin:'Guardar PIN', pin_guardado:'🔒 PIN configurado ✓', sin_pregunta:'Elegí una pregunta de seguridad.', sin_respuesta:'Ingresá tu respuesta.', cancelar:'Cancelar', rel:{none:'Sin especificar',cristiano:'Cristiano / Católico',evangelico:'Evangélico / Protestante',judio:'Judío',musulman:'Musulmán',budista:'Budista',hinduista:'Hinduista',espiritualidad:'Espiritualidad propia',agnostico:'Agnóstico',ateo:'Ateo'} },
+  en:{ title:'Profile', save:'Save', lang_label:'🌐 App language', welcome_title:'Welcome to VISTOP', welcome_body:'Choose your language and complete your profile to get started.', step:'Step 1 of 3', name_ph:'Your name', profile_ph:'Complete your profile', nombre_ph:'Your full name', mail_ph:'your@email.com', sec_personal:'Personal info', sec_spirit:'Spirituality', lbl_nombre:'Full name', lbl_mail:'Main email', lbl_fecha:'Date of birth', lbl_religion:'Religion / spirituality (optional)', sec_obj:'Objectives', sec_metas:'Goals', add_obj:'Add objective', add_meta:'Add goal', obj_ph:'Write an objective...', meta_ph:'Write a goal...', saved:'Profile saved ✓', sec_security:'Security', pin_titulo:'Access PIN', pin_sub:'Protect your app with a 6-digit PIN', pin_activo:'ACTIVE', btn_config:'Set PIN', btn_cambiar:'Change PIN', pin_modal_titulo:'New PIN', paso1:'Step 1 of 3 — Enter your new PIN', paso2:'Step 2 of 3 — Confirm your PIN', paso3:'Step 3 of 3 — Recovery question', no_coincide:'PINs do not match. Try again.', sq_etiqueta:'Security question — use it to recover access if you forget your PIN', sq_ph:'Your answer...', btn_guardar_pin:'Save PIN', pin_guardado:'🔒 PIN set ✓', sin_pregunta:'Choose a security question.', sin_respuesta:'Enter your answer.', cancelar:'Cancel', rel:{none:'Not specified',cristiano:'Christian / Catholic',evangelico:'Evangelical / Protestant',judio:'Jewish',musulman:'Muslim',budista:'Buddhist',hinduista:'Hindu',espiritualidad:'Own spirituality',agnostico:'Agnostic',ateo:'Atheist'} },
+  pt:{ title:'Perfil', save:'Salvar', lang_label:'🌐 Idioma do app', welcome_title:'Bem-vindo ao VISTOP', welcome_body:'Escolha seu idioma e complete seu perfil para começar.', step:'Passo 1 de 3', name_ph:'Seu nome', profile_ph:'Complete seu perfil', nombre_ph:'Seu nome completo', mail_ph:'seu@email.com', sec_personal:'Dados pessoais', sec_spirit:'Espiritualidade', lbl_nombre:'Nome completo', lbl_mail:'E-mail principal', lbl_fecha:'Data de nascimento', lbl_religion:'Religião / espiritualidade (opcional)', sec_obj:'Objetivos', sec_metas:'Metas', add_obj:'Adicionar objetivo', add_meta:'Adicionar meta', obj_ph:'Escreva um objetivo...', meta_ph:'Escreva uma meta...', saved:'Perfil salvo ✓', sec_security:'Segurança', pin_titulo:'PIN de acesso', pin_sub:'Proteja seu app com um PIN de 6 dígitos', pin_activo:'ATIVO', btn_config:'Configurar PIN', btn_cambiar:'Mudar PIN', pin_modal_titulo:'Novo PIN', paso1:'Passo 1 de 3 — Digite seu novo PIN', paso2:'Passo 2 de 3 — Confirme seu PIN', paso3:'Passo 3 de 3 — Pergunta de recuperação', no_coincide:'Os PINs não coincidem. Tente novamente.', sq_etiqueta:'Pergunta de segurança — use para recuperar o acesso se esquecer o PIN', sq_ph:'Sua resposta...', btn_guardar_pin:'Salvar PIN', pin_guardado:'🔒 PIN configurado ✓', sin_pregunta:'Escolha uma pergunta de segurança.', sin_respuesta:'Digite sua resposta.', cancelar:'Cancelar', rel:{none:'Não especificado',cristiano:'Cristão / Católico',evangelico:'Evangélico / Protestante',judio:'Judeu',musulman:'Muçulmano',budista:'Budista',hinduista:'Hinduísta',espiritualidad:'Espiritualidade própria',agnostico:'Agnóstico',ateo:'Ateu'} },
+  fr:{ title:'Profil', save:'Enregistrer', lang_label:"🌐 Langue de l'app", welcome_title:'Bienvenue sur VISTOP', welcome_body:'Choisissez votre langue et complétez votre profil pour commencer.', step:'Étape 1 sur 3', name_ph:'Votre nom', profile_ph:'Complétez votre profil', nombre_ph:'Votre nom complet', mail_ph:'votre@email.com', sec_personal:'Données personnelles', sec_spirit:'Spiritualité', lbl_nombre:'Nom complet', lbl_mail:'E-mail principal', lbl_fecha:'Date de naissance', lbl_religion:'Religion / spiritualité (optionnel)', sec_obj:'Objectifs', sec_metas:'Buts', add_obj:'Ajouter un objectif', add_meta:'Ajouter un but', obj_ph:'Écrivez un objectif...', meta_ph:'Écrivez un but...', saved:'Profil enregistré ✓', sec_security:'Sécurité', pin_titulo:"PIN d'accès", pin_sub:'Protégez votre app avec un PIN à 6 chiffres', pin_activo:'ACTIF', btn_config:'Configurer PIN', btn_cambiar:'Changer PIN', pin_modal_titulo:'Nouveau PIN', paso1:'Étape 1 sur 3 — Entrez votre nouveau PIN', paso2:'Étape 2 sur 3 — Confirmez votre PIN', paso3:'Étape 3 sur 3 — Question de récupération', no_coincide:'Les PINs ne correspondent pas. Réessayez.', sq_etiqueta:"Question de sécurité — utilisez-la pour récupérer l'accès si vous oubliez votre PIN", sq_ph:'Votre réponse...', btn_guardar_pin:'Enregistrer PIN', pin_guardado:'🔒 PIN configuré ✓', sin_pregunta:'Choisissez une question de sécurité.', sin_respuesta:'Entrez votre réponse.', cancelar:'Annuler', rel:{none:'Non spécifié',cristiano:'Chrétien / Catholique',evangelico:'Évangélique / Protestant',judio:'Juif',musulman:'Musulman',budista:'Bouddhiste',hinduista:'Hindou',espiritualidad:'Spiritualité propre',agnostico:'Agnostique',ateo:'Athée'} },
+  de:{ title:'Profil', save:'Speichern', lang_label:'🌐 App-Sprache', welcome_title:'Willkommen bei VISTOP', welcome_body:'Wählen Sie Ihre Sprache und vervollständigen Sie Ihr Profil.', step:'Schritt 1 von 3', name_ph:'Ihr Name', profile_ph:'Profil vervollständigen', nombre_ph:'Ihr vollständiger Name', mail_ph:'ihre@email.com', sec_personal:'Persönliche Daten', sec_spirit:'Spiritualität', lbl_nombre:'Vollständiger Name', lbl_mail:'Haupt-E-Mail', lbl_fecha:'Geburtsdatum', lbl_religion:'Religion / Spiritualität (optional)', sec_obj:'Ziele', sec_metas:'Vorsätze', add_obj:'Ziel hinzufügen', add_meta:'Vorsatz hinzufügen', obj_ph:'Schreiben Sie ein Ziel...', meta_ph:'Schreiben Sie einen Vorsatz...', saved:'Profil gespeichert ✓', sec_security:'Sicherheit', pin_titulo:'Zugangs-PIN', pin_sub:'Schützen Sie Ihre App mit einer 6-stelligen PIN', pin_activo:'AKTIV', btn_config:'PIN einrichten', btn_cambiar:'PIN ändern', pin_modal_titulo:'Neue PIN', paso1:'Schritt 1 von 3 — Geben Sie Ihre neue PIN ein', paso2:'Schritt 2 von 3 — Bestätigen Sie Ihre PIN', paso3:'Schritt 3 von 3 — Wiederherstellungsfrage', no_coincide:'PINs stimmen nicht überein. Versuchen Sie es erneut.', sq_etiqueta:'Sicherheitsfrage — damit können Sie den Zugang wiederherstellen wenn Sie die PIN vergessen', sq_ph:'Ihre Antwort...', btn_guardar_pin:'PIN speichern', pin_guardado:'🔒 PIN eingerichtet ✓', sin_pregunta:'Wählen Sie eine Sicherheitsfrage.', sin_respuesta:'Geben Sie Ihre Antwort ein.', cancelar:'Abbrechen', rel:{none:'Nicht angegeben',cristiano:'Christlich / Katholisch',evangelico:'Evangelisch / Protestant',judio:'Jüdisch',musulman:'Muslimisch',budista:'Buddhistisch',hinduista:'Hinduistisch',espiritualidad:'Eigene Spiritualität',agnostico:'Agnostisch',ateo:'Atheistisch'} },
+  it:{ title:'Profilo', save:'Salva', lang_label:"🌐 Lingua dell'app", welcome_title:'Benvenuto su VISTOP', welcome_body:'Scegli la tua lingua e completa il tuo profilo per iniziare.', step:'Passo 1 di 3', name_ph:'Il tuo nome', profile_ph:'Completa il tuo profilo', nombre_ph:'Il tuo nome completo', mail_ph:'tua@email.com', sec_personal:'Dati personali', sec_spirit:'Spiritualità', lbl_nombre:'Nome completo', lbl_mail:'Email principale', lbl_fecha:'Data di nascita', lbl_religion:'Religione / spiritualità (opzionale)', sec_obj:'Obiettivi', sec_metas:'Mete', add_obj:'Aggiungi obiettivo', add_meta:'Aggiungi meta', obj_ph:'Scrivi un obiettivo...', meta_ph:'Scrivi una meta...', saved:'Profilo salvato ✓', sec_security:'Sicurezza', pin_titulo:'PIN di accesso', pin_sub:'Proteggi la tua app con un PIN a 6 cifre', pin_activo:'ATTIVO', btn_config:'Configura PIN', btn_cambiar:'Cambia PIN', pin_modal_titulo:'Nuovo PIN', paso1:'Passo 1 di 3 — Inserisci il tuo nuovo PIN', paso2:'Passo 2 di 3 — Conferma il tuo PIN', paso3:'Passo 3 di 3 — Domanda di recupero', no_coincide:'I PIN non corrispondono. Riprova.', sq_etiqueta:"Domanda di sicurezza — usala per recuperare l'accesso se dimentichi il PIN", sq_ph:'La tua risposta...', btn_guardar_pin:'Salva PIN', pin_guardado:'🔒 PIN configurato ✓', sin_pregunta:'Scegli una domanda di sicurezza.', sin_respuesta:'Inserisci la tua risposta.', cancelar:'Annulla', rel:{none:'Non specificato',cristiano:'Cristiano / Cattolico',evangelico:'Evangelico / Protestante',judio:'Ebreo',musulman:'Musulmano',budista:'Buddista',hinduista:'Indù',espiritualidad:'Spiritualità propria',agnostico:'Agnostico',ateo:'Ateo'} },
+  ru:{ title:'Профиль', save:'Сохранить', lang_label:'🌐 Язык приложения', welcome_title:'Добро пожаловать в VISTOP', welcome_body:'Выберите язык и заполните профиль для начала работы.', step:'Шаг 1 из 3', name_ph:'Ваше имя', profile_ph:'Заполните профиль', nombre_ph:'Ваше полное имя', mail_ph:'ваш@email.com', sec_personal:'Личные данные', sec_spirit:'Духовность', lbl_nombre:'Полное имя', lbl_mail:'Основной email', lbl_fecha:'Дата рождения', lbl_religion:'Религия / духовность (необязательно)', sec_obj:'Цели', sec_metas:'Задачи', add_obj:'Добавить цель', add_meta:'Добавить задачу', obj_ph:'Напишите цель...', meta_ph:'Напишите задачу...', saved:'Профиль сохранён ✓', sec_security:'Безопасность', pin_titulo:'PIN доступа', pin_sub:'Защитите приложение 6-значным PIN', pin_activo:'АКТИВЕН', btn_config:'Установить PIN', btn_cambiar:'Изменить PIN', pin_modal_titulo:'Новый PIN', paso1:'Шаг 1 из 3 — Введите новый PIN', paso2:'Шаг 2 из 3 — Подтвердите PIN', paso3:'Шаг 3 из 3 — Контрольный вопрос', no_coincide:'PINы не совпадают. Попробуйте ещё раз.', sq_etiqueta:'Контрольный вопрос — используйте для восстановления доступа если забудете PIN', sq_ph:'Ваш ответ...', btn_guardar_pin:'Сохранить PIN', pin_guardado:'🔒 PIN установлен ✓', sin_pregunta:'Выберите контрольный вопрос.', sin_respuesta:'Введите ваш ответ.', cancelar:'Отмена', rel:{none:'Не указано',cristiano:'Христианин / Католик',evangelico:'Евангелист / Протестант',judio:'Иудей',musulman:'Мусульманин',budista:'Буддист',hinduista:'Индуист',espiritualidad:'Собственная духовность',agnostico:'Агностик',ateo:'Атеист'} },
+};
+
+function getLang(){var sel=document.getElementById('idioma');var v=sel?sel.value:'';if(!v){try{var r=localStorage.getItem('vistop_titular');if(r){var o=JSON.parse(r);v=o.idioma||'es-AR';}}catch(e){}}if(!v)v='es-AR';if(v.indexOf('en')===0)return 'en';if(v.indexOf('pt')===0)return 'pt';if(v.indexOf('fr')===0)return 'fr';if(v.indexOf('de')===0)return 'de';if(v.indexOf('it')===0)return 'it';if(v.indexOf('ru')===0)return 'ru';return 'es';}
+
+function applyLang(){
+  var lang=getLang(),t=T[lang]||T['es'];
+  document.getElementById('tit-title').textContent=t.title;
+  document.getElementById('save-btn').textContent=t.save;
+  document.getElementById('lang-first-label').textContent=t.lang_label;
+  document.getElementById('welcome-title').textContent=t.welcome_title;
+  document.getElementById('welcome-body').textContent=t.welcome_body;
+  document.getElementById('welcome-step-text').textContent=t.step;
+  document.getElementById('sec-personal').textContent=t.sec_personal;
+  document.getElementById('sec-spirit').textContent=t.sec_spirit;
+  document.getElementById('sec-obj').textContent=t.sec_obj;
+  document.getElementById('sec-metas').textContent=t.sec_metas;
+  document.getElementById('lbl-nombre').textContent=t.lbl_nombre;
+  document.getElementById('lbl-mail').textContent=t.lbl_mail;
+  document.getElementById('lbl-fecha').textContent=t.lbl_fecha;
+  document.getElementById('lbl-religion').textContent=t.lbl_religion;
+  document.getElementById('lbl-add-obj').textContent=t.add_obj;
+  document.getElementById('lbl-add-meta').textContent=t.add_meta;
+  document.getElementById('nombre').placeholder=t.nombre_ph;
+  document.getElementById('mail').placeholder=t.mail_ph;
+  document.getElementById('sec-security').textContent=t.sec_security;
+  document.getElementById('pin-titulo-label').textContent=t.pin_titulo;
+  document.getElementById('pin-sub-label').textContent=t.pin_sub;
+  document.getElementById('sq-etiqueta').textContent=t.sq_etiqueta;
+  document.getElementById('sq-respuesta').placeholder=t.sq_ph;
+  document.getElementById('btn-guardar-pin-final').textContent=t.btn_guardar_pin;
+  document.getElementById('pin-cancelar-txt').textContent=t.cancelar;
+  var hasPin=false;try{hasPin=!!localStorage.getItem('vistop_pin_hash');}catch(e){}
+  document.getElementById('pin-badge-activo').style.display=hasPin?'block':'none';
+  document.getElementById('pin-badge-activo').textContent=t.pin_activo;
+  document.getElementById('btn-configurar-pin').textContent=hasPin?t.btn_cambiar:t.btn_config;
+  var n=document.getElementById('nombre').value.trim(),m=document.getElementById('mail').value.trim();
+  if(!n)document.getElementById('avatar-name').textContent=t.name_ph;
+  if(!m)document.getElementById('avatar-sub').textContent=t.profile_ph;
+  var relVal=document.getElementById('religion').value,r=t.rel;
+  document.getElementById('rel-none').textContent=r.none;document.getElementById('rel-cristiano').textContent=r.cristiano;document.getElementById('rel-evangelico').textContent=r.evangelico;document.getElementById('rel-judio').textContent=r.judio;document.getElementById('rel-musulman').textContent=r.musulman;document.getElementById('rel-budista').textContent=r.budista;document.getElementById('rel-hinduista').textContent=r.hinduista;document.getElementById('rel-espir').textContent=r.espiritualidad;document.getElementById('rel-agnostico').textContent=r.agnostico;document.getElementById('rel-ateo').textContent=r.ateo;
+  document.getElementById('religion').value=relVal;
+  var oi=document.querySelectorAll('#objetivos-list .item-input');for(var i=0;i<oi.length;i++)oi[i].placeholder=t.obj_ph;
+  var mi=document.querySelectorAll('#metas-list .item-input');for(var j=0;j<mi.length;j++)mi[j].placeholder=t.meta_ph;
+}
+
+function onIdiomaChange(){var idioma=document.getElementById('idioma').value;try{var raw=localStorage.getItem('vistop_titular');var obj=raw?JSON.parse(raw):{};obj.idioma=idioma;localStorage.setItem('vistop_titular',JSON.stringify(obj));}catch(e){}try{var s=VISTOP.get('titular',{})||{};s.idioma=idioma;VISTOP.save('titular',s);}catch(e){}applyLang();setTimeout(function(){applyLang();},50);try{window.parent.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}}
+
+var SIGNOS=[{nombre:'Capricornio',symbol:'♑',desde:[12,22],hasta:[1,19]},{nombre:'Acuario',symbol:'♒',desde:[1,20],hasta:[2,18]},{nombre:'Piscis',symbol:'♓',desde:[2,19],hasta:[3,20]},{nombre:'Aries',symbol:'♈',desde:[3,21],hasta:[4,19]},{nombre:'Tauro',symbol:'♉',desde:[4,20],hasta:[5,20]},{nombre:'Géminis',symbol:'♊',desde:[5,21],hasta:[6,20]},{nombre:'Cáncer',symbol:'♋',desde:[6,21],hasta:[7,22]},{nombre:'Leo',symbol:'♌',desde:[7,23],hasta:[8,22]},{nombre:'Virgo',symbol:'♍',desde:[8,23],hasta:[9,22]},{nombre:'Libra',symbol:'♎',desde:[9,23],hasta:[10,22]},{nombre:'Escorpio',symbol:'♏',desde:[10,23],hasta:[11,21]},{nombre:'Sagitario',symbol:'♐',desde:[11,22],hasta:[12,21]}];
+function getSigno(d){if(!d)return null;var dt=new Date(d+'T12:00:00'),mes=dt.getMonth()+1,dia=dt.getDate();for(var i=0;i<SIGNOS.length;i++){var s=SIGNOS[i],dm=s.desde[0],dd=s.desde[1],hm=s.hasta[0],hd=s.hasta[1];if(dm===hm){if(mes===dm&&dia>=dd&&dia<=hd)return s;}else{if((mes===dm&&dia>=dd)||(mes===hm&&dia<=hd))return s;}}return SIGNOS[0];}
+
+var data={nombre:'',mail:'',fecha_nacimiento:'',idioma:'es-AR',religion:'',objetivos:[],metas:[]};
+
+function cargar(){
+  try{var raw=localStorage.getItem('vistop_titular');if(raw){var saved=JSON.parse(raw);data.nombre=saved.nombre||'';data.mail=saved.mail||'';data.fecha_nacimiento=saved.fecha_nacimiento||'';data.idioma=saved.idioma||'es-AR';data.religion=saved.religion||'';data.objetivos=saved.objetivos||[];data.metas=saved.metas||[];}}catch(e){}
+  document.getElementById('idioma').value=data.idioma||'es-AR';
+  document.getElementById('nombre').value=data.nombre||'';
+  document.getElementById('mail').value=data.mail||'';
+  document.getElementById('fecha_nacimiento').value=data.fecha_nacimiento||'';
+  document.getElementById('religion').value=data.religion||'';
+  renderItems('objetivos',data.objetivos||[]);
+  renderItems('metas',data.metas||[]);
+  actualizarAvatar();actualizarSigno();
+  applyLang();
+  setTimeout(function(){applyLang();},80);
+  setTimeout(function(){applyLang();},250);
+  if(!data.nombre||!data.nombre.trim())document.getElementById('welcome-banner').style.display='block';
+}
+
+function guardar(){
+  var n=document.getElementById('nombre').value.trim();
+  if(!n){document.getElementById('nombre').focus();document.getElementById('nombre').style.borderColor='rgba(255,69,96,0.6)';setTimeout(function(){document.getElementById('nombre').style.borderColor='';},2000);return;}
+  data.nombre=n;data.mail=document.getElementById('mail').value.trim();data.fecha_nacimiento=document.getElementById('fecha_nacimiento').value;data.idioma=document.getElementById('idioma').value;data.religion=document.getElementById('religion').value;data.objetivos=leerItems('objetivos');data.metas=leerItems('metas');
+  try{localStorage.setItem('vistop_titular',JSON.stringify(data));}catch(e){}try{VISTOP.save('titular',data);}catch(e){}
+  var toast=document.getElementById('toast');toast.textContent=T[getLang()].saved;toast.classList.add('show');setTimeout(function(){toast.classList.remove('show');},2500);
+  actualizarAvatar();document.getElementById('welcome-banner').style.display='none';
+  try{window.parent.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}
+  try{window.parent.postMessage({type:'VISTOP_TITULAR_SAVED'},'*');}catch(e){}
+}
+
+function actualizarAvatar(){var n=document.getElementById('nombre').value.trim(),m=document.getElementById('mail').value.trim(),t=T[getLang()]||T['es'];var init='';if(n){var p=n.split(' ');for(var i=0;i<Math.min(2,p.length);i++){if(p[i])init+=p[i][0].toUpperCase();}}document.getElementById('avatar-initials').textContent=init||'?';document.getElementById('avatar-name').textContent=n||t.name_ph;document.getElementById('avatar-sub').textContent=m||t.profile_ph;}
+function actualizarSigno(){var f=document.getElementById('fecha_nacimiento').value,w=document.getElementById('zodiac-wrap');if(!f){w.style.display='none';return;}var s=getSigno(f);if(s){document.getElementById('zodiac-symbol').textContent=s.symbol;document.getElementById('zodiac-name').textContent=s.nombre;w.style.display='block';}}
+function renderItems(tipo,items){var l=document.getElementById(tipo+'-list');l.innerHTML='';for(var i=0;i<items.length;i++)l.appendChild(buildItemRow(tipo,items[i]));}
+function buildItemRow(tipo,text){var t=T[getLang()]||T['es'];var row=document.createElement('div');row.className='item-row';var inp=document.createElement('input');inp.type='text';inp.className='item-input';inp.value=text||'';inp.placeholder=tipo==='objetivos'?t.obj_ph:t.meta_ph;var del=document.createElement('button');del.type='button';del.className='item-delete';del.innerHTML='×';(function(r){del.onclick=function(){r.remove();};})(row);row.appendChild(inp);row.appendChild(del);return row;}
+function agregarItem(tipo){var l=document.getElementById(tipo+'-list'),row=buildItemRow(tipo,'');l.appendChild(row);row.querySelector('.item-input').focus();}
+function leerItems(tipo){var items=[],inputs=document.getElementById(tipo+'-list').querySelectorAll('.item-input');for(var i=0;i<inputs.length;i++){var v=inputs[i].value.trim();if(v)items.push(v);}return items;}
+
+/* ══ PIN ══ */
+var pinPaso=1,pinPrimero='',pinActual='';
+
+function abrirModalPin(){
+  var t=T[getLang()]||T['es'];
+  pinPaso=1;pinPrimero='';pinActual='';
+  document.getElementById('pin-modal-titulo').textContent=t.pin_modal_titulo;
+  document.getElementById('pin-modal-paso').textContent=t.paso1;
+  document.getElementById('pin-modal-error').textContent='';
+  document.getElementById('sq-bloque').classList.remove('visible');
+  document.getElementById('sq-pregunta').value='';
+  document.getElementById('sq-respuesta').value='';
+  actualizarPuntos();
+  document.getElementById('pin-overlay').classList.add('abierto');
+}
+
+function cerrarModalPin(){document.getElementById('pin-overlay').classList.remove('abierto');}
+
+function actualizarPuntos(){for(var i=0;i<6;i++){var p=document.getElementById('pp'+i);if(i<pinActual.length){p.classList.add('lleno');}else{p.classList.remove('lleno');}}}
+
+function pinTecla(d){if(pinActual.length>=6)return;pinActual+=d;actualizarPuntos();document.getElementById('pin-modal-error').textContent='';if(pinActual.length===6)setTimeout(procesarPaso,150);}
+function pinBorrar(){pinActual=pinActual.slice(0,-1);actualizarPuntos();}
+
+function procesarPaso(){
+  var t=T[getLang()]||T['es'];
+  if(pinPaso===1){pinPrimero=pinActual;pinActual='';pinPaso=2;document.getElementById('pin-modal-paso').textContent=t.paso2;actualizarPuntos();}
+  else if(pinPaso===2){
+    if(pinActual!==pinPrimero){document.getElementById('pin-modal-error').textContent=t.no_coincide;pinPrimero='';pinActual='';pinPaso=1;document.getElementById('pin-modal-paso').textContent=t.paso1;actualizarPuntos();}
+    else{pinPaso=3;document.getElementById('pin-modal-paso').textContent=t.paso3;document.getElementById('sq-bloque').classList.add('visible');actualizarPuntos();}
+  }
+}
+
+function guardarPinFinal(){
+  var t=T[getLang()]||T['es'];
+  var q=document.getElementById('sq-pregunta').value;
+  var a=document.getElementById('sq-respuesta').value.trim().toLowerCase();
+  if(!q){document.getElementById('pin-modal-error').textContent=t.sin_pregunta;return;}
+  if(!a||a.length<2){document.getElementById('pin-modal-error').textContent=t.sin_respuesta;return;}
+  var qText=document.getElementById('sq-pregunta').options[document.getElementById('sq-pregunta').selectedIndex].text;
+  localStorage.setItem('vistop_pin_hash', pinPrimero);
+  localStorage.setItem('vistop_security_question', qText);
+  localStorage.setItem('vistop_security_answer_hash', a);
+  cerrarModalPin();applyLang();
+  var toast=document.getElementById('toast');toast.textContent=t.pin_guardado;toast.classList.add('show');
+  setTimeout(function(){toast.classList.remove('show');},2500);
+}
+
+document.addEventListener('keydown',function(e){if(!document.getElementById('pin-overlay').classList.contains('abierto'))return;if(document.getElementById('sq-bloque').classList.contains('visible'))return;if(e.key>='0'&&e.key<='9')pinTecla(e.key);else if(e.key==='Backspace')pinBorrar();});
+
+window.addEventListener('message',function(event){
+  if(event.data&&event.data.type==='VISTOP_LANG_CHANGE')setTimeout(function(){applyLang();},30);
+  if(event.data&&event.data.type==='VISTOP_RESET_PIN')setTimeout(function(){abrirModalPin();},500);
+});
+
+cargar();
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "VISTOP",
+  "short_name": "VISTOP",
+  "description": "Tu agente de escucha, memoria y análisis personal.",
+  "start_url": "/app.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050A14",
+  "theme_color": "#050A14",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle"],
+  "lang": "es"
+}

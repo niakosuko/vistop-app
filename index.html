@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VISTOP – Calibración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root { --bg:#050A14; --cyan:#00D4FF; --blue:#0066FF; --text-primary:#FFFFFF; --text-secondary:rgba(255,255,255,0.75); --text-muted:rgba(255,255,255,0.45); --radius-card:24px; --radius-pill:100px; --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:16px;overflow-y:auto;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
+  .screen{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 60px;}
+  .step-indicator{display:flex;align-items:center;gap:6px;margin-bottom:32px;}
+  .step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);}
+  .step-dot.done{background:rgba(0,212,255,0.5);}
+  .step-dot.active{background:var(--cyan);box-shadow:0 0 8px rgba(0,212,255,0.6);}
+  .step-label{font-family:var(--font-display);font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;margin-left:4px;}
+  .mic-visual{position:relative;width:120px;height:120px;margin-bottom:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .mic-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(0,212,255,0.3);}
+  .mic-ring.ring-2{inset:-16px;border-color:rgba(0,212,255,0.15);}
+  .mic-ring.ring-3{inset:-32px;border-color:rgba(0,212,255,0.07);}
+  .mic-ring.pulsing{animation:ring-pulse 2s ease-in-out infinite;}
+  .mic-ring.ring-2.pulsing{animation:ring-pulse 2s ease-in-out infinite 0.3s;}
+  .mic-ring.ring-3.pulsing{animation:ring-pulse 2s ease-in-out infinite 0.6s;}
+  @keyframes ring-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:0.4}}
+  .mic-core{width:80px;height:80px;border-radius:50%;background:rgba(0,212,255,0.12);border:1.5px solid rgba(0,212,255,0.5);display:flex;align-items:center;justify-content:center;transition:all 0.4s;position:relative;z-index:1;}
+  .mic-core.recording{background:rgba(0,212,255,0.22);border-color:var(--cyan);box-shadow:0 0 40px rgba(0,212,255,0.35);}
+  .mic-core.done{background:rgba(0,212,255,0.18);border-color:var(--cyan);}
+  .mic-core svg{width:32px;height:32px;}
+  .title{font-family:var(--font-display);font-size:26px;font-weight:700;text-align:center;margin-bottom:12px;}
+  .subtitle{font-size:15px;color:var(--text-secondary);text-align:center;line-height:1.7;max-width:300px;margin-bottom:40px;}
+  .progress-wrap{width:100%;max-width:320px;margin-bottom:14px;opacity:0;transition:opacity 0.4s;}
+  .progress-wrap.visible{opacity:1;}
+  .progress-label{display:flex;justify-content:space-between;margin-bottom:8px;}
+  .progress-text{font-size:13px;color:var(--text-secondary);}
+  .progress-time{font-family:var(--font-display);font-size:14px;color:var(--cyan);font-weight:700;}
+  .progress-bar-bg{width:100%;height:5px;background:rgba(255,255,255,0.12);border-radius:100px;overflow:hidden;}
+  .progress-bar-fill{height:100%;width:0%;border-radius:100px;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width 0.3s;}
+  .live-transcript{width:100%;max-width:320px;min-height:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:14px 18px;margin-bottom:28px;opacity:0;transition:opacity 0.4s;}
+  .live-transcript.visible{opacity:1;}
+  .live-transcript p{font-size:14px;color:var(--text-muted);line-height:1.6;font-style:italic;}
+  .live-transcript p.has-text{color:var(--text-primary);font-style:normal;}
+  .suggestions{width:100%;max-width:320px;margin-bottom:28px;opacity:0;transition:opacity 0.4s;}
+  .suggestions.visible{opacity:1;}
+  .suggestions-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;font-weight:600;}
+  .suggestion-chip{display:inline-block;padding:6px 14px;border-radius:100px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);font-size:13px;color:var(--text-secondary);margin:4px 4px 0 0;}
+  .done-card{display:none;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:320px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.35);border-radius:var(--radius-card);padding:28px 24px;text-align:center;margin-bottom:20px;}
+  .done-card.visible{display:flex;}
+  .done-check{width:56px;height:56px;border-radius:50%;background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.5);display:flex;align-items:center;justify-content:center;}
+  .done-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--cyan);}
+  .done-body{font-size:14px;color:var(--text-secondary);line-height:1.6;}
+  .already-done{display:none;flex-direction:column;align-items:center;gap:20px;text-align:center;padding:20px 0;}
+  .already-done.visible{display:flex;}
+  .btn-primary{width:100%;max-width:320px;padding:18px;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;font-family:var(--font-display);font-size:16px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;box-shadow:0 4px 24px rgba(0,212,255,0.3);}
+  .btn-primary:active{transform:scale(0.97);}
+  .btn-secondary{width:100%;max-width:320px;padding:16px;border-radius:var(--radius-pill);background:transparent;color:var(--text-secondary);font-family:var(--font-display);font-size:15px;font-weight:600;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;margin-top:12px;}
+  .btn-secondary:active{background:rgba(255,255,255,0.06);}
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="step-indicator">
+    <div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div>
+    <span class="step-label" id="step-label">Paso 2 de 3</span>
+  </div>
+  <div class="mic-visual">
+    <div class="mic-ring ring-3" id="ring3"></div>
+    <div class="mic-ring ring-2" id="ring2"></div>
+    <div class="mic-ring" id="ring1"></div>
+    <div class="mic-core" id="mic-core">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+    </div>
+  </div>
+  <div id="intro-text">
+    <h1 class="title" id="cal-title">Calibrá tu voz</h1>
+    <p class="subtitle" id="cal-subtitle">VISTOP necesita escucharte para reconocerte. Hablá con naturalidad durante 20 segundos.</p>
+  </div>
+  <div class="suggestions" id="suggestions">
+    <div class="suggestions-label" id="sugg-label">Podés hablar sobre</div>
+    <span class="suggestion-chip" id="sugg-1">Cómo fue tu día</span>
+    <span class="suggestion-chip" id="sugg-2">Tus planes de esta semana</span>
+    <span class="suggestion-chip" id="sugg-3">Algo que te preocupa</span>
+    <span class="suggestion-chip" id="sugg-4">Una meta que tenés</span>
+  </div>
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-label"><span class="progress-text" id="progress-text">Escuchando...</span><span class="progress-time" id="progress-time">0s</span></div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+  </div>
+  <div class="live-transcript" id="live-transcript"><p id="transcript-text"></p></div>
+  <div class="done-card" id="done-card">
+    <div class="done-check"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="done-title" id="done-title">Voz calibrada ✓</div>
+    <div class="done-body" id="done-body">VISTOP ya reconoce tu voz.</div>
+  </div>
+  <div class="already-done" id="already-done">
+    <div class="done-check"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h1 class="title" id="already-title">Voz ya calibrada</h1>
+    <p class="subtitle" id="already-body">Tu voz está registrada.</p>
+  </div>
+  <button type="button" class="btn-primary" id="btn-main" onclick="handleMainBtn()">Iniciar calibración</button>
+  <button type="button" class="btn-secondary" id="btn-skip" onclick="handleSkip()" style="display:none;">Ir a la app</button>
+</div>
+<script>
+const VISTOP=window.parent?.VISTOP||{save(k,v){try{localStorage.setItem('vistop_'+k,JSON.stringify(v));}catch(e){}},get(k,fb){try{const r=localStorage.getItem('vistop_'+k);return r!==null?JSON.parse(r):(fb!==undefined?fb:null);}catch(e){return fb!==undefined?fb:null;}}};
+
+const CAL_T={
+  es:{step:'Paso 2 de 3',title:'Calibrá tu voz',subtitle:'VISTOP necesita escucharte para reconocerte. Hablá con naturalidad durante 20 segundos.',btn:'Iniciar calibración',stop:'Detener',go:'Comenzar a escuchar',recal:'Recalibrar',done_title:'Voz calibrada ✓',done_body:'VISTOP ya reconoce tu voz. Podés empezar.',already_title:'Voz ya calibrada',already_body:'Tu voz está registrada. Podés recalibrar si cambiaron las condiciones.',talking:'Hablá con normalidad',learning:'Contá cualquier cosa. VISTOP está aprendiendo tu voz.',short:'Muy corto, intentá de nuevo',listening:'Escuchando...',sugg_label:'Podés hablar sobre',sugg:['Cómo fue tu día','Tus planes de esta semana','Algo que te preocupa','Una meta que tenés']},
+  en:{step:'Step 2 of 3',title:'Calibrate your voice',subtitle:'VISTOP needs to hear you to recognize you. Speak naturally for 20 seconds.',btn:'Start calibration',stop:'Stop',go:'Start listening',recal:'Recalibrate',done_title:'Voice calibrated ✓',done_body:'VISTOP now recognizes your voice. You can start.',already_title:'Voice already calibrated',already_body:'Your voice is registered. You can recalibrate if conditions changed.',talking:'Speak naturally',learning:'Talk about anything. VISTOP is learning your voice.',short:'Too short, try again',listening:'Listening...',sugg_label:'You can talk about',sugg:['How your day went','Your plans for this week','Something that worries you','A goal you have']},
+  pt:{step:'Passo 2 de 3',title:'Calibre sua voz',subtitle:'VISTOP precisa te ouvir para reconhecê-lo. Fale naturalmente por 20 segundos.',btn:'Iniciar calibração',stop:'Parar',go:'Começar a escutar',recal:'Recalibrar',done_title:'Voz calibrada ✓',done_body:'VISTOP agora reconhece sua voz.',already_title:'Voz já calibrada',already_body:'Sua voz está registrada.',talking:'Fale normalmente',learning:'Fale sobre qualquer coisa.',short:'Muito curto, tente novamente',listening:'Escutando...',sugg_label:'Você pode falar sobre',sugg:['Como foi seu dia','Seus planos para essa semana','Algo que te preocupa','Uma meta que você tem']},
+  fr:{step:'Étape 2 sur 3',title:'Calibrez votre voix',subtitle:"VISTOP a besoin de vous entendre. Parlez naturellement pendant 20 secondes.",btn:'Démarrer la calibration',stop:'Arrêter',go:"Commencer à écouter",recal:'Recalibrer',done_title:'Voix calibrée ✓',done_body:'VISTOP reconnaît maintenant votre voix.',already_title:'Voix déjà calibrée',already_body:'Votre voix est enregistrée.',talking:'Parlez naturellement',learning:"Parlez de n'importe quoi.",short:'Trop court, réessayez',listening:'En écoute...',sugg_label:'Vous pouvez parler de',sugg:["Comment s'est passée votre journée",'Vos plans pour cette semaine','Quelque chose qui vous préoccupe','Un objectif que vous avez']},
+  de:{step:'Schritt 2 von 3',title:'Stimme kalibrieren',subtitle:'VISTOP muss Sie hören, um Sie zu erkennen. Sprechen Sie 20 Sekunden natürlich.',btn:'Kalibrierung starten',stop:'Stoppen',go:'Mit Zuhören beginnen',recal:'Neu kalibrieren',done_title:'Stimme kalibriert ✓',done_body:'VISTOP erkennt jetzt Ihre Stimme.',already_title:'Stimme bereits kalibriert',already_body:'Ihre Stimme ist registriert.',talking:'Sprechen Sie natürlich',learning:'Sprechen Sie über alles.',short:'Zu kurz, versuchen Sie es erneut',listening:'Hört zu...',sugg_label:'Sie können sprechen über',sugg:['Wie Ihr Tag war','Ihre Pläne für diese Woche','Etwas das Sie beschäftigt','Ein Ziel das Sie haben']},
+  it:{step:'Passo 2 di 3',title:'Calibra la tua voce',subtitle:'VISTOP ha bisogno di sentirti per riconoscerti. Parla naturalmente per 20 secondi.',btn:'Inizia calibrazione',stop:'Ferma',go:"Inizia ad ascoltare",recal:'Ricalibrare',done_title:'Voce calibrata ✓',done_body:'VISTOP ora riconosce la tua voce.',already_title:'Voce già calibrata',already_body:'La tua voce è registrata.',talking:'Parla normalmente',learning:'Parla di qualsiasi cosa.',short:'Troppo corto, riprova',listening:'In ascolto...',sugg_label:'Puoi parlare di',sugg:['Come è andata la tua giornata','I tuoi piani per questa settimana','Qualcosa che ti preoccupa','Un obiettivo che hai']},
+  ru:{step:'Шаг 2 из 3',title:'Калибровка голоса',subtitle:'VISTOP должен вас слышать чтобы вас узнать. Говорите естественно 20 секунд.',btn:'Начать калибровку',stop:'Остановить',go:'Начать слушать',recal:'Перекалибровать',done_title:'Голос откалиброван ✓',done_body:'VISTOP теперь узнаёт ваш голос.',already_title:'Голос уже откалиброван',already_body:'Ваш голос зарегистрирован.',talking:'Говорите естественно',learning:'Говорите о чём угодно.',short:'Слишком коротко, попробуйте снова',listening:'Слушаю...',sugg_label:'Вы можете говорить о',sugg:['Как прошёл ваш день','Ваши планы на эту неделю','Что вас беспокоит','Ваша цель']},
+};
+
+function getLang(){const t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
+
+function applyLang(){
+  const t=CAL_T[getLang()];
+  document.getElementById('step-label').textContent=t.step;
+  document.getElementById('sugg-label').textContent=t.sugg_label;
+  t.sugg.forEach((s,i)=>{const el=document.getElementById('sugg-'+(i+1));if(el)el.textContent=s;});
+  document.getElementById('done-title').textContent=t.done_title;
+  document.getElementById('done-body').textContent=t.done_body;
+  document.getElementById('already-title').textContent=t.already_title;
+  document.getElementById('already-body').textContent=t.already_body;
+  if(state==='idle'){document.getElementById('cal-title').textContent=t.title;document.getElementById('cal-subtitle').textContent=t.subtitle;document.getElementById('btn-main').textContent=t.btn;}
+  if(state==='done'){document.getElementById('btn-main').textContent=t.recal;document.getElementById('btn-skip').textContent=t.go;}
+}
+
+const DURACION=20;
+let state='idle',timer=null,elapsed=0,recognition=null,transcriptAcumulado='';
+const micCore=document.getElementById('mic-core'),ring1=document.getElementById('ring1'),ring2=document.getElementById('ring2'),ring3=document.getElementById('ring3');
+const progressWrap=document.getElementById('progress-wrap'),progressFill=document.getElementById('progress-fill');
+const progressTime=document.getElementById('progress-time'),progressText=document.getElementById('progress-text');
+const liveTranscript=document.getElementById('live-transcript'),transcriptText=document.getElementById('transcript-text');
+const doneCard=document.getElementById('done-card'),alreadyDone=document.getElementById('already-done');
+const introText=document.getElementById('intro-text'),suggestions=document.getElementById('suggestions');
+const btnMain=document.getElementById('btn-main'),btnSkip=document.getElementById('btn-skip');
+
+function init(){
+  applyLang();
+  if(VISTOP.get('calibrado',false)){
+    introText.style.display='none'; alreadyDone.classList.add('visible'); micCore.classList.add('done');
+    const t=CAL_T[getLang()];
+    btnMain.textContent=t.recal; btnSkip.style.display='block'; btnSkip.textContent=t.go; state='done';
+  }
+}
+
+function handleMainBtn(){if(state==='idle'||state==='done') startCalibration(); else if(state==='recording') stopCalibration(false);}
+function handleSkip(){window.parent?.postMessage({type:'VISTOP_CALIBRADO'},'*');}
+
+function startCalibration(){
+  const t=CAL_T[getLang()]; state='recording'; elapsed=0; transcriptAcumulado='';
+  alreadyDone.classList.remove('visible'); doneCard.classList.remove('visible'); introText.style.display='';
+  document.getElementById('cal-title').textContent=t.talking;
+  document.getElementById('cal-subtitle').textContent=t.learning;
+  progressWrap.classList.add('visible'); liveTranscript.classList.add('visible'); suggestions.classList.add('visible');
+  transcriptText.textContent=''; transcriptText.className='';
+  micCore.classList.add('recording'); ring1.classList.add('pulsing'); ring2.classList.add('pulsing'); ring3.classList.add('pulsing');
+  btnMain.textContent=t.stop; btnSkip.style.display='none'; progressText.textContent=t.listening;
+  timer=setInterval(()=>{elapsed++;progressFill.style.width=Math.min((elapsed/DURACION)*100,100)+'%';progressTime.textContent=elapsed+'s';if(elapsed>=DURACION)stopCalibration(true);},1000);
+  startLocalRecognition();
+}
+
+function stopCalibration(completado){
+  const t=CAL_T[getLang()];
+  if(timer){clearInterval(timer);timer=null;} stopLocalRecognition(); state='done';
+  micCore.classList.remove('recording'); micCore.classList.add('done');
+  ring1.classList.remove('pulsing'); ring2.classList.remove('pulsing'); ring3.classList.remove('pulsing');
+  if(completado||elapsed>=5){
+    VISTOP.save('calibrado',true); VISTOP.save('calibracion_ts',Date.now());
+    progressWrap.classList.remove('visible'); liveTranscript.classList.remove('visible'); suggestions.classList.remove('visible');
+    introText.style.display='none'; doneCard.classList.add('visible');
+    btnMain.textContent=t.go; btnSkip.style.display='none';
+    btnMain.onclick=function(){window.parent?.postMessage({type:'VISTOP_CALIBRADO'},'*');};
+    if(window.parent?.initRecognition) window.parent.initRecognition();
+  } else {
+    progressText.textContent=t.short; progressFill.style.width='0%'; progressTime.textContent='0s';
+    btnMain.textContent=t.btn; btnMain.onclick=handleMainBtn; state='idle'; micCore.classList.remove('done');
+  }
+}
+
+function startLocalRecognition(){
+  const SpeechAPI=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SpeechAPI)return;
+  recognition=new SpeechAPI(); recognition.continuous=true; recognition.interimResults=true;
+  recognition.lang=(VISTOP.get('titular',{})||{}).idioma||'es-AR';
+  recognition.onresult=(event)=>{let interim='';for(let i=event.resultIndex;i<event.results.length;i++){const tx=event.results[i][0].transcript;if(event.results[i].isFinal)transcriptAcumulado+=tx+' ';else interim=tx;}const d=(transcriptAcumulado+interim).trim();if(d){transcriptText.textContent=d;transcriptText.className='has-text';}};
+  recognition.onerror=(e)=>{if(e.error==='not-allowed')stopCalibration(false);};
+  recognition.onend=()=>{if(state==='recording')try{recognition.start();}catch(e){}};
+  try{recognition.start();}catch(e){}
+}
+function stopLocalRecognition(){if(recognition){try{recognition.stop();}catch(e){}recognition=null;}}
+
+window.addEventListener('message',function(event){if(event.data&&event.data.type==='VISTOP_LANG_CHANGE') applyLang();});
+
+init();
+</script>
+</body>
+</html>

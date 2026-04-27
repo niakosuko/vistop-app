@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VISTOP – Análisis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root { --bg:#050A14; --bg-input:rgba(255,255,255,0.08); --border:rgba(255,255,255,0.15); --cyan:#00D4FF; --blue:#0066FF; --text-primary:#FFFFFF; --text-secondary:rgba(255,255,255,0.75); --text-muted:rgba(255,255,255,0.45); --radius-card:24px; --radius-pill:100px; --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; --turak:#00D4FF; --cirak:#C89FFF; }
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:16px;line-height:1.5;overflow-y:auto;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
+  .screen{padding:20px 20px 80px;}
+  .top-bar{display:flex;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .top-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+  .mode-selector{display:flex;gap:6px;margin-bottom:24px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-pill);padding:5px;}
+  .mode-btn{flex:1;padding:13px 0;border-radius:var(--radius-pill);border:none;background:transparent;font-family:var(--font-display);font-size:15px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.25s;letter-spacing:0.05em;}
+  .mode-btn.active-turak{background:rgba(0,212,255,0.18);color:var(--turak);border:1px solid rgba(0,212,255,0.4);}
+  .mode-btn.active-cirak{background:rgba(200,159,255,0.18);color:var(--cirak);border:1px solid rgba(200,159,255,0.4);}
+  .mode-desc{padding:18px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:20px;margin-bottom:24px;display:flex;gap:14px;align-items:flex-start;}
+  .mode-desc-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;}
+  .mode-desc-icon.turak{background:rgba(0,212,255,0.15);}
+  .mode-desc-icon.cirak{background:rgba(200,159,255,0.15);}
+  .mode-desc-name{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:5px;}
+  .mode-desc-name.turak{color:var(--turak);}
+  .mode-desc-name.cirak{color:var(--cirak);}
+  .mode-desc-body{font-size:14px;color:var(--text-secondary);line-height:1.6;}
+  .analyze-btn{width:100%;padding:18px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;margin-bottom:24px;display:flex;align-items:center;justify-content:center;gap:10px;}
+  .analyze-btn.turak{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;box-shadow:0 4px 24px rgba(0,212,255,0.3);}
+  .analyze-btn.cirak{background:linear-gradient(135deg,#C89FFF,#7B2FFF);color:#fff;box-shadow:0 4px 24px rgba(123,47,255,0.3);}
+  .analyze-btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+  .result-card{display:none;flex-direction:column;gap:20px;border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-card);padding:24px 20px;margin-bottom:20px;}
+  .result-card.visible{display:flex;}
+  .result-card.turak{border-color:rgba(0,212,255,0.25);background:rgba(0,212,255,0.05);}
+  .result-card.cirak{border-color:rgba(200,159,255,0.25);background:rgba(200,159,255,0.05);}
+  .result-header{display:flex;align-items:center;justify-content:space-between;}
+  .result-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+  .result-title.turak{color:var(--turak);}
+  .result-title.cirak{color:var(--cirak);}
+  .speak-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);color:var(--text-secondary);font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .speak-btn.speaking{border-color:rgba(200,159,255,0.5);color:var(--cirak);background:rgba(200,159,255,0.1);}
+  .speak-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .speak-btn.speaking .speak-dot{animation:pulse-dot 1.5s ease-in-out infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+  .result-text{font-size:15px;color:var(--text-primary);line-height:1.85;white-space:pre-wrap;}
+  .voice-section{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:18px 20px;margin-bottom:24px;}
+  .voice-label{font-size:11px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:12px;}
+  .voice-select{width:100%;padding:12px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer;}
+  .voice-select option{background:#0D1628;}
+  .loading-wrap{display:none;flex-direction:column;align-items:center;gap:14px;padding:32px 0;}
+  .loading-wrap.visible{display:flex;}
+  .loading-dots{display:flex;gap:8px;}
+  .loading-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.3);animation:loading-bounce 1.2s ease-in-out infinite;}
+  .loading-dot:nth-child(2){animation-delay:0.2s}.loading-dot:nth-child(3){animation-delay:0.4s}
+  @keyframes loading-bounce{0%,100%{transform:translateY(0);opacity:0.3}50%{transform:translateY(-7px);opacity:1}}
+  .loading-text{font-size:14px;color:var(--text-secondary);font-style:italic;}
+  .no-memory{display:none;flex-direction:column;align-items:center;gap:12px;padding:32px 20px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-card);margin-bottom:24px;}
+  .no-memory.visible{display:flex;}
+  .no-memory-text{font-size:14px;color:var(--text-secondary);line-height:1.6;max-width:260px;}
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="top-bar"><div class="top-title" id="ana-title">Análisis</div></div>
+  <div class="mode-selector">
+    <button type="button" class="mode-btn active-turak" id="btn-turak" onclick="setMode('turak')">TURAK</button>
+    <button type="button" class="mode-btn" id="btn-cirak" onclick="setMode('cirak')">CIRAK</button>
+  </div>
+  <div class="mode-desc">
+    <div class="mode-desc-icon turak" id="mode-icon">⚡</div>
+    <div><div class="mode-desc-name turak" id="mode-name">Turak</div><div class="mode-desc-body" id="mode-body">Coach de acción.</div></div>
+  </div>
+  <div class="no-memory" id="no-memory">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+    <div class="no-memory-text" id="no-memory-text">No hay transcripciones aún.</div>
+  </div>
+  <button type="button" class="analyze-btn turak" id="analyze-btn" onclick="analizar()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    <span id="analyze-label">Analizar con Turak</span>
+  </button>
+  <div class="loading-wrap" id="loading-wrap">
+    <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+    <div class="loading-text" id="loading-text">Analizando...</div>
+  </div>
+  <div class="result-card turak" id="result-card">
+    <div class="result-header">
+      <div class="result-title turak" id="result-title">TURAK</div>
+      <button type="button" class="speak-btn" id="speak-btn" onclick="toggleSpeech()"><div class="speak-dot"></div><span id="speak-label">Escuchar</span></button>
+    </div>
+    <div class="result-text" id="result-text"></div>
+  </div>
+  <div class="voice-section">
+    <div class="voice-label" id="voice-label">Voz de devolución</div>
+    <select class="voice-select" id="voice-select" onchange="guardarVoz()"><option value="">-</option></select>
+  </div>
+</div>
+<script>
+const VISTOP=window.parent?.VISTOP||{get:()=>null,save:()=>{}};
+let modoActual='turak', vocesDisponibles=[], utterance=null, hablando=false;
+
+const ANA_T={
+  es:{title:'Análisis',turak_desc:'Coach de acción. Analiza tus objetivos, tu foco y te empuja a ejecutar. Sin rodeos.',cirak_desc:'Guía interior. Analiza tu mundo emocional, tus vínculos y te conecta con tu esencia.',btn_turak:'Analizar con Turak',btn_cirak:'Analizar con Cirak',loading_turak:'Turak está analizando...',loading_cirak:'Cirak está reflexionando...',no_memory:'No hay transcripciones aún. Empezá a escuchar para poder analizar.',listen:'Escuchar',stop:'Detener',voice_label:'Voz de devolución',voice_default:'Voz por defecto'},
+  en:{title:'Analysis',turak_desc:'Action coach. Analyzes your objectives, focus and pushes you to execute. No detours.',cirak_desc:'Inner guide. Analyzes your emotional world, your bonds and connects you to your essence.',btn_turak:'Analyze with Turak',btn_cirak:'Analyze with Cirak',loading_turak:'Turak is analyzing...',loading_cirak:'Cirak is reflecting...',no_memory:'No transcriptions yet. Start listening to be able to analyze.',listen:'Listen',stop:'Stop',voice_label:'Response voice',voice_default:'Default voice'},
+  pt:{title:'Análise',turak_desc:'Coach de ação. Analisa seus objetivos, foco e te empurra a executar.',cirak_desc:'Guia interior. Analisa seu mundo emocional e te conecta à sua essência.',btn_turak:'Analisar com Turak',btn_cirak:'Analisar com Cirak',loading_turak:'Turak está analisando...',loading_cirak:'Cirak está refletindo...',no_memory:'Sem transcrições ainda. Comece a escutar para analisar.',listen:'Ouvir',stop:'Parar',voice_label:'Voz de resposta',voice_default:'Voz padrão'},
+  fr:{title:'Analyse',turak_desc:"Coach d'action. Analyse vos objectifs, votre focus et vous pousse à agir.",cirak_desc:'Guide intérieur. Analyse votre monde émotionnel et vous connecte à votre essence.',btn_turak:'Analyser avec Turak',btn_cirak:'Analyser avec Cirak',loading_turak:'Turak analyse...',loading_cirak:'Cirak réfléchit...',no_memory:"Pas encore de transcriptions. Commencez à écouter pour analyser.",listen:'Écouter',stop:'Arrêter',voice_label:'Voix de réponse',voice_default:'Voix par défaut'},
+  de:{title:'Analyse',turak_desc:'Action-Coach. Analysiert Ihre Ziele, Ihren Fokus und bringt Sie zum Handeln.',cirak_desc:'Innerer Führer. Analysiert Ihre emotionale Welt und verbindet Sie mit Ihrem Wesen.',btn_turak:'Mit Turak analysieren',btn_cirak:'Mit Cirak analysieren',loading_turak:'Turak analysiert...',loading_cirak:'Cirak überlegt...',no_memory:'Noch keine Transkriptionen. Starten Sie das Zuhören zum Analysieren.',listen:'Anhören',stop:'Stoppen',voice_label:'Antwort-Stimme',voice_default:'Standardstimme'},
+  it:{title:'Analisi',turak_desc:"Coach di azione. Analizza i tuoi obiettivi, il tuo focus e ti spinge ad agire.",cirak_desc:'Guida interiore. Analizza il tuo mondo emotivo e ti connette alla tua essenza.',btn_turak:'Analizza con Turak',btn_cirak:'Analizza con Cirak',loading_turak:'Turak sta analizzando...',loading_cirak:'Cirak sta riflettendo...',no_memory:'Nessuna trascrizione ancora. Inizia ad ascoltare per analizzare.',listen:'Ascolta',stop:'Ferma',voice_label:'Voce di risposta',voice_default:'Voce predefinita'},
+  ru:{title:'Анализ',turak_desc:'Тренер по действиям. Анализирует ваши цели, фокус и толкает вас к выполнению.',cirak_desc:'Внутренний проводник. Анализирует ваш эмоциональный мир и соединяет вас с вашей сущностью.',btn_turak:'Анализировать с Turak',btn_cirak:'Анализировать с Cirak',loading_turak:'Turak анализирует...',loading_cirak:'Cirak размышляет...',no_memory:'Транскрипций пока нет. Начните слушать для анализа.',listen:'Слушать',stop:'Остановить',voice_label:'Голос ответа',voice_default:'Голос по умолчанию'},
+};
+
+const PATTERNS={
+  es:{conflicto:/no sé|duda|confundido|perdido|cansado|frustrado/i,accion:/voy a|quiero|necesito|tengo que|planeo|decidí/i,distraccion:/pero|aunque|tal vez|quizás/i,emocion:/siento|me duele|me alegra|estoy|me preocupa|extraño|amo|odio/i,vinculo:/mi mamá|mi papá|mi pareja|mi amigo|mi jefe|familia/i},
+  en:{conflicto:/don't know|doubt|confused|lost|tired|frustrated/i,accion:/going to|i want|i need|have to|planning|decided/i,distraccion:/but|although|maybe|perhaps/i,emocion:/feel|hurts|happy|worried|miss|love|hate/i,vinculo:/my mom|my dad|my partner|my friend|my boss|family/i},
+  pt:{conflicto:/não sei|dúvida|confuso|perdido|cansado|frustrado/i,accion:/vou|quero|preciso|tenho que|planejo|decidi/i,distraccion:/mas|embora|talvez/i,emocion:/sinto|dói|alegra|estou|preocupa|saudade|amo|odeio/i,vinculo:/minha mãe|meu pai|meu parceiro|meu amigo|família/i},
+  fr:{conflicto:/ne sais pas|doute|confus|perdu|fatigué|frustré/i,accion:/vais|veux|dois|ai besoin|décidé/i,distraccion:/mais|peut-être|bien que/i,emocion:/ressens|fait mal|heureux|inquiet|manque|aime|déteste/i,vinculo:/ma mère|mon père|mon partenaire|mon ami|famille/i},
+  de:{conflicto:/weiß nicht|zweifel|verwirrt|verloren|müde|frustriert/i,accion:/werde|will|brauche|muss|plane|entschieden/i,distraccion:/aber|obwohl|vielleicht/i,emocion:/fühle|schmerzt|glücklich|besorgt|vermisse|liebe|hasse/i,vinculo:/meine mutter|mein vater|mein partner|mein freund|familie/i},
+  it:{conflicto:/non so|dubbio|confuso|perso|stanco|frustrato/i,accion:/andrò|voglio|ho bisogno|devo|ho deciso/i,distraccion:/ma|forse|sebbene/i,emocion:/sento|fa male|felice|preoccupato|mi manca|amo|odio/i,vinculo:/mia madre|mio padre|il mio partner|il mio amico|famiglia/i},
+  ru:{conflicto:/не знаю|сомнение|запутался|потерялся|устал|расстроен/i,accion:/собираюсь|хочу|нужно|должен|планирую|решил/i,distraccion:/но|хотя|может быть/i,emocion:/чувствую|болит|счастлив|беспокоюсь|скучаю|люблю|ненавижу/i,vinculo:/моя мама|мой папа|мой партнер|мой друг|семья/i},
+};
+
+function getLang(){const t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
+
+function applyLang(){
+  const t=ANA_T[getLang()],m=modoActual;
+  document.getElementById('ana-title').textContent=t.title;
+  document.getElementById('no-memory-text').textContent=t.no_memory;
+  document.getElementById('voice-label').textContent=t.voice_label;
+  document.getElementById('speak-label').textContent=hablando?t.stop:t.listen;
+  document.getElementById('mode-body').textContent=m==='turak'?t.turak_desc:t.cirak_desc;
+  document.getElementById('analyze-label').textContent=m==='turak'?t.btn_turak:t.btn_cirak;
+  const sel=document.getElementById('voice-select');if(sel.options[0])sel.options[0].textContent=t.voice_default;
+}
+
+function init(){
+  applyLang(); cargarVoces();
+  window.speechSynthesis.onvoiceschanged=cargarVoces;
+  const memoria=VISTOP.get('memoria',[])||[];
+  if(!memoria.length){document.getElementById('no-memory').classList.add('visible');document.getElementById('analyze-btn').disabled=true;}
+}
+
+function setMode(modo){
+  modoActual=modo;
+  const t=ANA_T[getLang()];
+  document.getElementById('btn-turak').className='mode-btn'+(modo==='turak'?' active-turak':'');
+  document.getElementById('btn-cirak').className='mode-btn'+(modo==='cirak'?' active-cirak':'');
+  document.getElementById('mode-icon').textContent=modo==='turak'?'⚡':'🌙';
+  document.getElementById('mode-icon').className='mode-desc-icon '+modo;
+  document.getElementById('mode-name').textContent=modo==='turak'?'Turak':'Cirak';
+  document.getElementById('mode-name').className='mode-desc-name '+modo;
+  document.getElementById('mode-body').textContent=modo==='turak'?t.turak_desc:t.cirak_desc;
+  document.getElementById('analyze-label').textContent=modo==='turak'?t.btn_turak:t.btn_cirak;
+  const btn=document.getElementById('analyze-btn');btn.className='analyze-btn '+modo;
+  const rc=document.getElementById('result-card');rc.className='result-card '+modo;rc.classList.remove('visible');
+  document.getElementById('result-title').className='result-title '+modo;
+  document.getElementById('result-title').textContent=modo==='turak'?'TURAK':'CIRAK';
+  stopSpeech();
+}
+
+function analizar(){
+  const memoria=VISTOP.get('memoria',[])||[],titular=VISTOP.get('titular',{})||{};
+  if(!memoria.length)return;
+  const ultimas=memoria.slice(-20).map(e=>`${e.speaker}: ${e.text}`).join('\n');
+  const t=ANA_T[getLang()];
+  document.getElementById('loading-wrap').classList.add('visible');
+  document.getElementById('loading-text').textContent=modoActual==='turak'?t.loading_turak:t.loading_cirak;
+  document.getElementById('result-card').classList.remove('visible');
+  document.getElementById('analyze-btn').disabled=true;
+  stopSpeech();
+  setTimeout(()=>{
+    mostrarResultado(generarAnalisis(modoActual,ultimas,titular));
+    document.getElementById('loading-wrap').classList.remove('visible');
+    document.getElementById('analyze-btn').disabled=false;
+  },1800);
+}
+
+function generarAnalisis(modo,transcripcion,titular){
+  const lang=getLang(),nombre=titular.nombre?titular.nombre.split(' ')[0]:'';
+  const objetivos=(titular.objetivos||[]).join(', ')||getNoObjText(lang);
+  const metas=(titular.metas||[]).join(', ')||getNoMetaText(lang);
+  const signo=getSigno(titular.fecha_nacimiento);
+  const religion=titular.religion||'';
+  return modo==='turak'?generarTurak(lang,nombre,transcripcion,objetivos,metas):generarCirak(lang,nombre,transcripcion,objetivos,metas,signo,religion);
+}
+
+function getNoObjText(l){return{es:'sin objetivos registrados',en:'no objectives registered',pt:'sem objetivos registrados',fr:"pas d'objectifs enregistrés",de:'keine Ziele registriert',it:'nessun obiettivo registrato',ru:'цели не зарегистрированы'}[l]||'sin objetivos';}
+function getNoMetaText(l){return{es:'sin metas registradas',en:'no goals registered',pt:'sem metas registradas',fr:"pas de buts enregistrés",de:'keine Vorsätze registriert',it:'nessuna meta registrata',ru:'задачи не зарегистрированы'}[l]||'sin metas';}
+
+function generarTurak(lang,nombre,tx,objetivos,metas){
+  const p=PATTERNS[lang]||PATTERNS.es;
+  const tieneConflicto=p.conflicto.test(tx),tieneAccion=p.accion.test(tx),tieneDistraccion=p.distraccion.test(tx);
+  const TEXTOS={
+    es:{intro:`${nombre}, esto es lo que veo:\n\n`,conflicto:`Hay ruido en lo que decís. Palabras que dan vueltas sin dirección. Eso tiene un costo: energía que se va sin producir nada.\n\n`,accion:`Hay intención de moverte. Bien. Pero intención sin fecha y sin un primer paso concreto es solo un deseo.\n\n`,distraccion:`Cuidado con los "pero" y los "quizás". Son la forma más elegante de no decidir nada.\n\n`,obj:`Tus objetivos: ${objetivos}.\nTus metas: ${metas}.\n\n`,cierre:`La pregunta que te dejo: ¿qué acción concreta podés hacer en las próximas 2 horas que te acerque a eso? Solo una. Específica. Con hora de inicio.\n\nEso es Turak.`},
+    en:{intro:`${nombre}, here's what I see:\n\n`,conflicto:`There's noise in what you're saying. Words going around in circles with no direction. That has a cost: energy spent without producing anything.\n\n`,accion:`There's an intention to move. Good. But intention without a date and without a concrete first step is just a wish.\n\n`,distraccion:`Watch out for the "buts" and "maybes". They're the most elegant way to decide nothing.\n\n`,obj:`Your objectives: ${objetivos}.\nYour goals: ${metas}.\n\n`,cierre:`The question I leave you with: what one concrete action can you take in the next 2 hours that gets you closer? Just one. Specific. With a start time.\n\nThat's Turak.`},
+    pt:{intro:`${nombre}, é isso que vejo:\n\n`,conflicto:`Há ruído no que você está dizendo. Palavras girando em círculos sem direção. Isso tem um custo: energia gasta sem produzir nada.\n\n`,accion:`Há intenção de se mover. Bem. Mas intenção sem data e sem um primeiro passo concreto é apenas um desejo.\n\n`,distraccion:`Cuidado com os "mas" e os "talvez". São a forma mais elegante de não decidir nada.\n\n`,obj:`Seus objetivos: ${objetivos}.\nSuas metas: ${metas}.\n\n`,cierre:`A pergunta que deixo: qual ação concreta você pode fazer nas próximas 2 horas que te aproxime disso? Apenas uma. Específica. Com horário de início.\n\nIsso é Turak.`},
+    fr:{intro:`${nombre}, voici ce que je vois :\n\n`,conflicto:`Il y a du bruit dans ce que vous dites. Des mots qui tournent en rond sans direction. Cela a un coût : de l'énergie dépensée sans rien produire.\n\n`,accion:`Il y a une intention de bouger. Bien. Mais l'intention sans date et sans premier pas concret n'est qu'un souhait.\n\n`,distraccion:`Attention aux "mais" et aux "peut-être". Ce sont la façon la plus élégante de ne rien décider.\n\n`,obj:`Vos objectifs : ${objetivos}.\nVos buts : ${metas}.\n\n`,cierre:`La question que je vous pose : quelle action concrète pouvez-vous faire dans les 2 prochaines heures pour vous en rapprocher ? Une seule. Spécifique. Avec une heure de début.\n\nC'est Turak.`},
+    de:{intro:`${nombre}, hier ist, was ich sehe:\n\n`,conflicto:`Es gibt Lärm in dem, was Sie sagen. Worte, die ohne Richtung im Kreis drehen. Das hat einen Preis: Energie, die verbraucht wird, ohne etwas zu produzieren.\n\n`,accion:`Es gibt eine Absicht, sich zu bewegen. Gut. Aber Absicht ohne Datum und ohne einen konkreten ersten Schritt ist nur ein Wunsch.\n\n`,distraccion:`Vorsicht mit den "Abers" und "Vielleichts". Sie sind die eleganteste Art, nichts zu entscheiden.\n\n`,obj:`Ihre Ziele: ${objetivos}.\nIhre Vorsätze: ${metas}.\n\n`,cierre:`Die Frage, die ich Ihnen stelle: Welche konkrete Aktion können Sie in den nächsten 2 Stunden unternehmen, die Sie dem Ziel näherbringt? Nur eine. Spezifisch. Mit einer Startzeit.\n\nDas ist Turak.`},
+    it:{intro:`${nombre}, ecco cosa vedo:\n\n`,conflicto:`C'è rumore in quello che dici. Parole che girano in tondo senza direzione. Questo ha un costo: energia spesa senza produrre nulla.\n\n`,accion:`C'è un'intenzione di muoverti. Bene. Ma l'intenzione senza una data e senza un primo passo concreto è solo un desiderio.\n\n`,distraccion:`Attenzione ai "ma" e ai "forse". Sono il modo più elegante per non decidere nulla.\n\n`,obj:`I tuoi obiettivi: ${objetivos}.\nLe tue mete: ${metas}.\n\n`,cierre:`La domanda che ti lascio: quale azione concreta puoi fare nelle prossime 2 ore che ti avvicini a quello? Solo una. Specifica. Con un orario di inizio.\n\nQuesto è Turak.`},
+    ru:{intro:`${nombre}, вот что я вижу:\n\n`,conflicto:`В том, что вы говорите, есть шум. Слова, которые крутятся по кругу без направления. Это имеет цену: энергия тратится без результата.\n\n`,accion:`Есть намерение двигаться. Хорошо. Но намерение без даты и конкретного первого шага — это просто желание.\n\n`,distraccion:`Осторожно с "но" и "может быть". Это самый элегантный способ ничего не решить.\n\n`,obj:`Ваши цели: ${objetivos}.\nВаши задачи: ${metas}.\n\n`,cierre:`Вопрос, который я вам оставляю: какое одно конкретное действие вы можете сделать в ближайшие 2 часа, чтобы приблизиться к этому? Только одно. Конкретное. Со временем начала.\n\nЭто Turak.`},
+  };
+  const tx_=TEXTOS[lang]||TEXTOS.es;
+  let texto=tx_.intro;
+  if(tieneConflicto) texto+=tx_.conflicto;
+  if(tieneAccion) texto+=tx_.accion;
+  if(tieneDistraccion) texto+=tx_.distraccion;
+  texto+=tx_.obj+tx_.cierre;
+  return texto;
+}
+
+function generarCirak(lang,nombre,tx,objetivos,metas,signo,religion){
+  const p=PATTERNS[lang]||PATTERNS.es;
+  const tieneEmocion=p.emocion.test(tx),tieneVinculo=p.vinculo.test(tx);
+  const TEXTOS={
+    es:{intro:`${nombre}...\n\n`,emocion:`Hay algo que estás sintiendo y que merece ser escuchado antes de ser resuelto. No todo lo que duele es un problema. A veces es una señal de que algo importa.\n\n`,vinculo:`Hay personas en tu mundo que están ocupando espacio en tus pensamientos. Los vínculos nos forman tanto como nuestras decisiones.\n\n`,espiritual:`Tu dimensión espiritual es parte de tu centro. Cuando la lógica no alcanza, esa fuente puede sostenerte.\n\n`,cierre:`Lo que escucho en vos hoy no es solo información. Es una persona que está procesando algo real. Date el permiso de estar en ese proceso sin apurarte.\n\nEso es Cirak.`},
+    en:{intro:`${nombre}...\n\n`,emocion:`There's something you're feeling that deserves to be heard before it's solved. Not everything that hurts is a problem. Sometimes it's a signal that something matters.\n\n`,vinculo:`There are people in your world who are taking up space in your thoughts. Bonds shape us as much as our decisions.\n\n`,espiritual:`Your spiritual dimension is part of your center. When logic isn't enough, that source can sustain you.\n\n`,cierre:`What I hear in you today isn't just information. It's a person processing something real. Give yourself permission to be in that process without rushing.\n\nThat's Cirak.`},
+    pt:{intro:`${nombre}...\n\n`,emocion:`Há algo que você está sentindo que merece ser ouvido antes de ser resolvido. Nem tudo que dói é um problema. Às vezes é um sinal de que algo importa.\n\n`,vinculo:`Há pessoas no seu mundo que estão ocupando espaço nos seus pensamentos. Os vínculos nos formam tanto quanto nossas decisões.\n\n`,espiritual:`Sua dimensão espiritual faz parte do seu centro. Quando a lógica não é suficiente, essa fonte pode sustentá-lo.\n\n`,cierre:`O que ouço em você hoje não é apenas informação. É uma pessoa processando algo real. Dê-se permissão para estar nesse processo sem pressa.\n\nIsso é Cirak.`},
+    fr:{intro:`${nombre}...\n\n`,emocion:`Il y a quelque chose que vous ressentez qui mérite d'être entendu avant d'être résolu. Tout ce qui fait mal n'est pas un problème. Parfois c'est un signal que quelque chose compte.\n\n`,vinculo:`Il y a des personnes dans votre monde qui occupent de l'espace dans vos pensées. Les liens nous forment autant que nos décisions.\n\n`,espiritual:`Votre dimension spirituelle fait partie de votre centre. Quand la logique ne suffit pas, cette source peut vous soutenir.\n\n`,cierre:`Ce que j'entends en vous aujourd'hui n'est pas seulement de l'information. C'est une personne qui traite quelque chose de réel. Donnez-vous la permission d'être dans ce processus sans vous précipiter.\n\nC'est Cirak.`},
+    de:{intro:`${nombre}...\n\n`,emocion:`Es gibt etwas, das Sie fühlen, das gehört werden möchte, bevor es gelöst wird. Nicht alles, was schmerzt, ist ein Problem. Manchmal ist es ein Signal, dass etwas wichtig ist.\n\n`,vinculo:`Es gibt Menschen in Ihrer Welt, die Raum in Ihren Gedanken einnehmen. Bindungen formen uns genauso wie unsere Entscheidungen.\n\n`,espiritual:`Ihre spirituelle Dimension ist Teil Ihres Kerns. Wenn die Logik nicht ausreicht, kann diese Quelle Sie stützen.\n\n`,cierre:`Was ich heute in Ihnen höre, ist nicht nur Information. Es ist ein Mensch, der etwas Reales verarbeitet. Erlauben Sie sich, in diesem Prozess zu sein, ohne zu hetzen.\n\nDas ist Cirak.`},
+    it:{intro:`${nombre}...\n\n`,emocion:`C'è qualcosa che stai sentendo che merita di essere ascoltato prima di essere risolto. Non tutto ciò che fa male è un problema. A volte è un segnale che qualcosa è importante.\n\n`,vinculo:`Ci sono persone nel tuo mondo che occupano spazio nei tuoi pensieri. I legami ci formano tanto quanto le nostre decisioni.\n\n`,espiritual:`La tua dimensione spirituale fa parte del tuo centro. Quando la logica non basta, quella fonte può sostenerti.\n\n`,cierre:`Quello che sento in te oggi non è solo informazione. È una persona che elabora qualcosa di reale. Dai a te stesso il permesso di essere in quel processo senza fretta.\n\nQuesto è Cirak.`},
+    ru:{intro:`${nombre}...\n\n`,emocion:`Есть что-то, что вы чувствуете, что заслуживает быть услышанным прежде, чем быть решённым. Не всё, что болит, является проблемой. Иногда это сигнал о том, что что-то важно.\n\n`,vinculo:`В вашем мире есть люди, которые занимают место в ваших мыслях. Связи формируют нас так же, как и наши решения.\n\n`,espiritual:`Ваше духовное измерение является частью вашего центра. Когда логики не хватает, этот источник может поддержать вас.\n\n`,cierre:`То, что я слышу в вас сегодня, — это не просто информация. Это человек, обрабатывающий что-то реальное. Позвольте себе быть в этом процессе без спешки.\n\nЭто Cirak.`},
+  };
+  const tx_=TEXTOS[lang]||TEXTOS.es;
+  let texto=tx_.intro;
+  if(signo) texto+=getSignoText(lang,signo.nombre)+'\n\n';
+  if(tieneEmocion) texto+=tx_.emocion;
+  if(tieneVinculo) texto+=tx_.vinculo;
+  if(religion&&religion!=='agnostico'&&religion!=='ateo') texto+=tx_.espiritual;
+  texto+=tx_.cierre;
+  return texto;
+}
+
+const SIGNO_TEXTOS={
+  es:{Aries:'Energía que arranca fuerte. Este momento pide que pares y sientas antes de lanzarte.',Tauro:'Buscás estabilidad. Pero la seguridad también puede convertirse en resistencia al cambio necesario.',Géminis:'Tu mente procesa todo al mismo tiempo. El desafío es elegir un hilo y tirarlo hasta el final.',Cáncer:'Sentís profundo. Esa sensibilidad es un regalo, no una debilidad.',Leo:'Necesitás ser visto y eso es legítimo. Hoy el reconocimiento más importante viene de adentro.',Virgo:'Analizás todo. La perfección que buscás a veces te impide celebrar lo que ya lograste.',Libra:'Buscás equilibrio. Cuidado con sacrificar tus necesidades para no molestar a los demás.',Escorpio:'Lo que ocurre en las capas profundas de tu mundo interno es donde está la respuesta.',Sagitario:'Buscás expansión. Que la búsqueda no te impida ver el valor de lo que ya tenés.',Capricornio:'Tu disciplina es enorme. Pero el descanso también hace parte del camino.',Acuario:'Pensás diferente y eso es tu mayor valor. No minimices tu visión por encajar.',Piscis:'Sentís el mundo como pocos. Esa profundidad necesita anclas concretas.'},
+  en:{Aries:'Strong energy that jumps in. This moment asks you to stop and feel before launching.',Tauro:'You seek stability. But security can also become resistance to necessary change.',Géminis:'Your mind processes everything at once. The challenge is to choose one thread and follow it.',Cáncer:'You feel deeply. That sensitivity is a gift, not a weakness.',Leo:'You need to be seen and that is legitimate. Today the most important recognition comes from within.',Virgo:'You analyze everything. The perfection you seek sometimes prevents you from celebrating what you achieved.',Libra:'You seek balance. Be careful not to sacrifice your needs to avoid upsetting others.',Escorpio:'What happens in the deep layers of your inner world is where the answer lies.',Sagitario:'You seek expansion. Don\'t let the search prevent you from seeing the value of what you have.',Capricornio:'Your discipline is enormous. But rest is also part of the path.',Acuario:'You think differently and that is your greatest value. Don\'t minimize your vision to fit in.',Piscis:'You feel the world like few others. That depth needs concrete anchors.'},
+  pt:{Aries:'Energia forte que começa rápido. Este momento pede que você pare e sinta antes de se lançar.',Tauro:'Você busca estabilidade. Mas a segurança também pode se tornar resistência à mudança necessária.',Géminis:'Sua mente processa tudo ao mesmo tempo. O desafio é escolher um fio e segui-lo.',Cáncer:'Você sente profundo. Essa sensibilidade é um dom, não uma fraqueza.',Leo:'Você precisa ser visto e isso é legítimo. Hoje o reconhecimento mais importante vem de dentro.',Virgo:'Você analisa tudo. A perfeição que busca às vezes te impede de celebrar o que conquistou.',Libra:'Você busca equilíbrio. Cuidado para não sacrificar suas necessidades para não incomodar os outros.',Escorpio:'O que acontece nas camadas profundas do seu mundo interno é onde está a resposta.',Sagitario:'Você busca expansão. Que a busca não te impeça de ver o valor do que já tem.',Capricornio:'Sua disciplina é enorme. Mas o descanso também faz parte do caminho.',Acuario:'Você pensa diferente e isso é seu maior valor. Não minimize sua visão para se encaixar.',Piscis:'Você sente o mundo como poucos. Essa profundidade precisa de âncoras concretas.'},
+  fr:{Aries:"Énergie forte qui démarre vite. Ce moment vous demande de vous arrêter et de ressentir avant de vous lancer.",Tauro:"Vous cherchez la stabilité. Mais la sécurité peut aussi devenir une résistance au changement nécessaire.",Géminis:"Votre esprit traite tout en même temps. Le défi est de choisir un fil et de le suivre.",Cáncer:"Vous ressentez profondément. Cette sensibilité est un don, pas une faiblesse.",Leo:"Vous avez besoin d'être vu et c'est légitime. Aujourd'hui la reconnaissance la plus importante vient de l'intérieur.",Virgo:"Vous analysez tout. La perfection que vous cherchez vous empêche parfois de célébrer ce que vous avez accompli.",Libra:"Vous cherchez l'équilibre. Attention à ne pas sacrifier vos besoins pour ne pas déranger les autres.",Escorpio:"Ce qui se passe dans les couches profondes de votre monde intérieur est là où se trouve la réponse.",Sagitario:"Vous cherchez l'expansion. Que la recherche ne vous empêche pas de voir la valeur de ce que vous avez déjà.",Capricornio:"Votre discipline est énorme. Mais le repos fait aussi partie du chemin.",Acuario:"Vous pensez différemment et c'est votre plus grande valeur. Ne minimisez pas votre vision pour vous conformer.",Piscis:"Vous ressentez le monde comme peu de gens. Cette profondeur a besoin d'ancres concrètes."},
+  de:{Aries:"Starke Energie die schnell startet. Dieser Moment bittet Sie innezuhalten und zu fühlen bevor Sie starten.",Tauro:"Sie suchen Stabilität. Aber Sicherheit kann auch zur Resistenz gegen notwendige Veränderungen werden.",Géminis:"Ihr Geist verarbeitet alles auf einmal. Die Herausforderung besteht darin, einen Faden zu wählen und ihm zu folgen.",Cáncer:"Sie fühlen tief. Diese Sensibilität ist ein Geschenk, keine Schwäche.",Leo:"Sie müssen gesehen werden und das ist legitim. Heute kommt die wichtigste Anerkennung von innen.",Virgo:"Sie analysieren alles. Die Perfektion die Sie suchen hindert Sie manchmal daran zu feiern was Sie erreicht haben.",Libra:"Sie suchen Gleichgewicht. Seien Sie vorsichtig Ihre Bedürfnisse nicht zu opfern um andere nicht zu verärgern.",Escorpio:"Was in den tiefen Schichten Ihrer inneren Welt passiert ist dort wo die Antwort liegt.",Sagitario:"Sie suchen Expansion. Lassen Sie die Suche nicht verhindern den Wert dessen zu sehen was Sie bereits haben.",Capricornio:"Ihre Disziplin ist enorm. Aber Ruhe ist auch Teil des Weges.",Acuario:"Sie denken anders und das ist Ihr größter Wert. Minimieren Sie Ihre Vision nicht um sich anzupassen.",Piscis:"Sie fühlen die Welt wie wenige andere. Diese Tiefe braucht konkrete Anker."},
+  it:{Aries:"Energia forte che parte veloce. Questo momento ti chiede di fermarti e sentire prima di lanciarti.",Tauro:"Cerchi stabilità. Ma la sicurezza può anche diventare resistenza al cambiamento necessario.",Géminis:"La tua mente elabora tutto allo stesso tempo. La sfida è scegliere un filo e seguirlo.",Cáncer:"Senti profondo. Quella sensibilità è un dono, non una debolezza.",Leo:"Hai bisogno di essere visto e questo è legittimo. Oggi il riconoscimento più importante viene dall'interno.",Virgo:"Analizzi tutto. La perfezione che cerchi a volte ti impedisce di celebrare ciò che hai raggiunto.",Libra:"Cerchi equilibrio. Attenzione a non sacrificare i tuoi bisogni per non disturbare gli altri.",Escorpio:"Quello che accade negli strati profondi del tuo mondo interno è dove si trova la risposta.",Sagitario:"Cerchi espansione. Che la ricerca non ti impedisca di vedere il valore di ciò che già hai.",Capricornio:"La tua disciplina è enorme. Ma il riposo fa anche parte del percorso.",Acuario:"Pensi diversamente e questo è il tuo più grande valore. Non minimizzare la tua visione per adattarti.",Piscis:"Senti il mondo come pochi altri. Quella profondità ha bisogno di ancore concrete."},
+  ru:{Aries:"Сильная энергия которая быстро стартует. Этот момент просит вас остановиться и почувствовать прежде чем начинать.",Tauro:"Вы ищете стабильности. Но безопасность также может стать сопротивлением необходимым изменениям.",Géminis:"Ваш разум обрабатывает всё одновременно. Задача — выбрать одну нить и следовать ей.",Cáncer:"Вы чувствуете глубоко. Эта чувствительность — дар, а не слабость.",Leo:"Вам нужно быть замеченным и это законно. Сегодня самое важное признание приходит изнутри.",Virgo:"Вы всё анализируете. Совершенство которое вы ищете иногда мешает вам праздновать то чего вы достигли.",Libra:"Вы ищете равновесия. Будьте осторожны не жертвуйте своими потребностями чтобы не беспокоить других.",Escorpio:"То что происходит в глубоких слоях вашего внутреннего мира — это где находится ответ.",Sagitario:"Вы ищете расширения. Не позволяйте поиску мешать вам видеть ценность того что у вас уже есть.",Capricornio:"Ваша дисциплина огромна. Но отдых тоже является частью пути.",Acuario:"Вы думаете иначе и это ваша наибольшая ценность. Не преуменьшайте своё видение чтобы вписаться.",Piscis:"Вы чувствуете мир как немногие другие. Эта глубина нуждается в конкретных якорях."},
+};
+
+function getSignoText(lang,nombre){
+  const textos=SIGNO_TEXTOS[lang]||SIGNO_TEXTOS.es;
+  const prefijo={es:`Sos ${nombre}. `,en:`You're a ${nombre}. `,pt:`Você é ${nombre}. `,fr:`Vous êtes ${nombre}. `,de:`Sie sind ${nombre}. `,it:`Sei ${nombre}. `,ru:`Вы ${nombre}. `}[lang]||`${nombre}. `;
+  return prefijo+(textos[nombre]||'');
+}
+
+const SIGNOS=[{nombre:'Capricornio',desde:[12,22],hasta:[1,19]},{nombre:'Acuario',desde:[1,20],hasta:[2,18]},{nombre:'Piscis',desde:[2,19],hasta:[3,20]},{nombre:'Aries',desde:[3,21],hasta:[4,19]},{nombre:'Tauro',desde:[4,20],hasta:[5,20]},{nombre:'Géminis',desde:[5,21],hasta:[6,20]},{nombre:'Cáncer',desde:[6,21],hasta:[7,22]},{nombre:'Leo',desde:[7,23],hasta:[8,22]},{nombre:'Virgo',desde:[8,23],hasta:[9,22]},{nombre:'Libra',desde:[9,23],hasta:[10,22]},{nombre:'Escorpio',desde:[10,23],hasta:[11,21]},{nombre:'Sagitario',desde:[11,22],hasta:[12,21]}];
+function getSigno(d){if(!d)return null;const dt=new Date(d+'T12:00:00'),mes=dt.getMonth()+1,dia=dt.getDate();for(const s of SIGNOS){const[dm,dd]=s.desde,[hm,hd]=s.hasta;if(dm===hm){if(mes===dm&&dia>=dd&&dia<=hd)return s;}else{if((mes===dm&&dia>=dd)||(mes===hm&&dia<=hd))return s;}}return SIGNOS[0];}
+
+function mostrarResultado(texto){
+  const rc=document.getElementById('result-card');rc.className='result-card '+modoActual+' visible';
+  document.getElementById('result-title').textContent=modoActual==='turak'?'TURAK':'CIRAK';
+  document.getElementById('result-title').className='result-title '+modoActual;
+  document.getElementById('result-text').textContent=texto;
+}
+
+function cargarVoces(){
+  const voces=window.speechSynthesis.getVoices(),sel=document.getElementById('voice-select'),saved=VISTOP.get('voz_preferida',''),t=ANA_T[getLang()];
+  sel.innerHTML=`<option value="">${t.voice_default}</option>`;
+  vocesDisponibles=voces;
+  voces.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=`${v.name} (${v.lang})`;if(v.name===saved)o.selected=true;sel.appendChild(o);});
+}
+
+function guardarVoz(){VISTOP.save('voz_preferida',document.getElementById('voice-select').value);}
+
+function toggleSpeech(){if(hablando){stopSpeech();return;}const texto=document.getElementById('result-text').textContent;if(!texto)return;speakText(texto);}
+
+function speakText(texto){
+  stopSpeech();
+  window.parent?.postMessage({type:'VISTOP_SPEAKING_START'},'*');
+  utterance=new SpeechSynthesisUtterance(texto);
+  const vn=VISTOP.get('voz_preferida','');
+  if(vn){const v=vocesDisponibles.find(v=>v.name===vn);if(v)utterance.voice=v;}
+  const titular=VISTOP.get('titular',{})||{};
+  utterance.lang=titular.idioma||'es-AR'; utterance.rate=0.92; utterance.pitch=1;
+  utterance.onstart=()=>{hablando=true;setSpeakUI(true);};
+  utterance.onend=()=>{hablando=false;setSpeakUI(false);utterance=null;setTimeout(()=>window.parent?.postMessage({type:'VISTOP_SPEAKING_END'},'*'),600);};
+  utterance.onerror=()=>{hablando=false;setSpeakUI(false);utterance=null;setTimeout(()=>window.parent?.postMessage({type:'VISTOP_SPEAKING_END'},'*'),600);};
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeech(){
+  window.speechSynthesis.cancel();hablando=false;setSpeakUI(false);
+  if(utterance){utterance=null;setTimeout(()=>window.parent?.postMessage({type:'VISTOP_SPEAKING_END'},'*'),300);}
+}
+
+function setSpeakUI(speaking){
+  const t=ANA_T[getLang()],btn=document.getElementById('speak-btn'),lbl=document.getElementById('speak-label');
+  if(speaking){btn.classList.add('speaking');lbl.textContent=t.stop;}
+  else{btn.classList.remove('speaking');lbl.textContent=t.listen;}
+}
+
+window.addEventListener('message',function(event){if(event.data&&event.data.type==='VISTOP_LANG_CHANGE'){applyLang();cargarVoces();}});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISTOP – Resetear PIN</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#050A14;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px;text-align:center;padding:32px;}
+  .logo{font-size:28px;font-weight:700;letter-spacing:0.1em;background:linear-gradient(135deg,#00D4FF,#0066FF,#7B2FFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:32px 28px;max-width:340px;width:100%;}
+  h2{font-size:18px;margin-bottom:10px;}
+  p{font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:24px;}
+  .btn{width:100%;padding:16px;border-radius:100px;background:linear-gradient(135deg,#00D4FF,#0066FF);color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;}
+  .btn:active{transform:scale(0.97);}
+  .btn-volver{width:100%;padding:14px;border-radius:100px;background:transparent;color:rgba(255,255,255,0.5);font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,0.2);cursor:pointer;margin-top:12px;}
+  .ok{display:none;flex-direction:column;align-items:center;gap:16px;}
+  .check{width:64px;height:64px;border-radius:50%;background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.4);display:flex;align-items:center;justify-content:center;}
+  .ok-title{font-size:18px;font-weight:700;color:#00D4FF;}
+  .ok-body{font-size:14px;color:rgba(255,255,255,0.6);}
+  .btn-ir{padding:16px 40px;border-radius:100px;background:linear-gradient(135deg,#00D4FF,#0066FF);color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="logo">VISTOP</div>
+
+<div class="card" id="card-inicio">
+  <h2>Resetear PIN</h2>
+  <p>Esto borra el PIN guardado. Después de hacer click vas a poder entrar a la app sin PIN y configurar uno nuevo desde Titular → Seguridad.</p>
+  <button class="btn" onclick="resetearPin()">Borrar PIN ahora</button>
+  <button class="btn-volver" onclick="window.location.href='app.html'">Cancelar — volver a la app</button>
+</div>
+
+<div class="ok" id="card-ok">
+  <div class="check">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="ok-title">PIN borrado ✓</div>
+  <div class="ok-body">Ahora podés entrar a la app y configurar un PIN nuevo desde Titular → Seguridad.</div>
+  <button class="btn-ir" onclick="window.location.href='app.html'">Ir a la app</button>
+</div>
+
+<script>
+function resetearPin() {
+  var claves = [
+    'vistop_pin_hash',
+    'vistop_security_question',
+    'vistop_security_answer_hash'
+  ];
+  for (var i = 0; i < claves.length; i++) {
+    try { localStorage.removeItem(claves[i]); } catch(e) {}
+  }
+  document.getElementById('card-inicio').style.display = 'none';
+  document.getElementById('card-ok').style.display    = 'flex';
+}
+</script>
+</body>
+</html>
