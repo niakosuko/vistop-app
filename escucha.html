@@ -59,7 +59,7 @@
   .inter-name{font-family:var(--font-display);font-size:14px;font-weight:700;}
   .inter-role{font-size:12px;color:rgba(255,255,255,0.4);}
   .modal-divider{text-align:center;font-size:12px;color:rgba(255,255,255,0.3);}
-  .modal-btn-save{width:100%;padding:15px;border-radius:var(--radius-pill);background:linear-gradient(135deg,#00D4FF,#0066FF);color:#fff;font-family:var(--font-display);font-size:15px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;}
+  .modal-btn-save{width:100%;padding:15px;border-radius:var(--radius-pill);background:linear-gradient(135deg,#00D4FF,#0066FF);color:#fff;font-family:var(--font-display);font-size:15px;font-weight:700;border:none;cursor:pointer;}
   .modal-btn-save:active{transform:scale(0.97);}
   .modal-btn-cancel{width:100%;padding:13px;border-radius:var(--radius-pill);background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-family:var(--font-display);font-size:14px;font-weight:600;cursor:pointer;}
 </style>
@@ -111,11 +111,7 @@
 <script>
 var VISTOP=window.parent&&window.parent.VISTOP?window.parent.VISTOP:{get:function(){return null;},save:function(){},append:function(){}};
 var AppState=window.parent&&window.parent.AppState?window.parent.AppState:{};
-var micActive=false, speakerActual='titular', sessionStart=Date.now();
-
-/* ══ ANTI DUPLICADO EN PANTALLA ══ */
-var ultimaLineaMostrada = '';
-var ultimaLineaTs = 0;
+var micActive=false,speakerActual='titular',sessionStart=Date.now();
 
 var ESC_T={
   es:{title:'Escucha',start:'Iniciar',listening:'Escuchando',today:'Hoy',yesterday:'Ayer',empty_title:'Sin transcripciones aún',empty_body:'Tocá Iniciar y empezá a hablar.',habla:'Habla:',otro:'Otro habla',modal_title:'¿Quién habló?',modal_sub:'Identificá esta voz para registrarla',modal_or:'— o escribí un nombre nuevo —',modal_ph:'Nombre de la persona...',identificar:'Identificar',cancelar:'Cancelar'},
@@ -193,35 +189,6 @@ function buildLine(entry){
 }
 
 function addLine(entry){
-  /* ── ANTI DUPLICADO EN PANTALLA ──
-     Antes de agregar, verificar si es igual o contenido en la última línea mostrada
-     en los últimos 10 segundos */
-  var ahora=Date.now();
-  var t1=entry.text.toLowerCase().trim();
-  var t2=ultimaLineaMostrada.toLowerCase().trim();
-  if(t2&&(ahora-ultimaLineaTs)<10000){
-    if(t1===t2||t2.indexOf(t1)!==-1){
-      /* El nuevo es igual o más corto que el último — ignorar */
-      return;
-    }
-    if(t1.indexOf(t2)!==-1){
-      /* El nuevo contiene al anterior — reemplazar la última línea */
-      var lines=document.getElementById('transcript-lines');
-      var allLines=lines.querySelectorAll('.transcript-line');
-      if(allLines.length>0){
-        var lastLine=allLines[allLines.length-1];
-        var textEl=lastLine.querySelector('.line-text');
-        if(textEl)textEl.textContent=entry.text;
-        ultimaLineaMostrada=entry.text;
-        ultimaLineaTs=ahora;
-        return;
-      }
-    }
-  }
-
-  ultimaLineaMostrada=entry.text;
-  ultimaLineaTs=ahora;
-
   document.getElementById('empty-state').style.display='none';
   var dayKey=new Date(entry.ts).toISOString().slice(0,10);
   var block=document.getElementById('transcript-lines').querySelector('[data-day="'+dayKey+'"]');
@@ -260,7 +227,6 @@ function syncMicState(){
 }
 
 function abrirModalIdentificar(){
-  var t=ESC_T[getLang()];
   document.getElementById('modal-nombre-input').value='';
   var lista=document.getElementById('interlocutores-list');lista.innerHTML='';
   var inters=VISTOP.get('interlocutores',[])||[];
@@ -293,12 +259,11 @@ function confirmarIdentificacion(){
 window.addEventListener('message',function(event){
   var msg=event.data||{},type=msg.type;
   if(type==='VISTOP_TRANSCRIPT'){
-    var text=msg.text,isFinal=msg.isFinal,timestamp=msg.timestamp,speaker=msg.speaker;
-    if(isFinal){
+    if(msg.isFinal){
       document.getElementById('interim-text').textContent='';
-      addLine({speaker:speaker||getTitularName(),text:text,ts:timestamp||Date.now()});
+      addLine({speaker:msg.speaker||getTitularName(),text:msg.text,ts:msg.timestamp||Date.now()});
     } else {
-      document.getElementById('interim-text').textContent=text;
+      document.getElementById('interim-text').textContent=msg.text;
     }
   }
   if(type==='VISTOP_MIC_STATUS'){
@@ -309,12 +274,7 @@ window.addEventListener('message',function(event){
   if(type==='VISTOP_SPEAKER_IDENTIFIED'){
     document.getElementById('otro-chip-label').textContent=msg.speaker;
     speakerActual=msg.speaker;
-    /* Actualizar líneas en pantalla que tengan speaker desconocido */
-    document.querySelectorAll('.sp-unknown').forEach(function(el){
-      el.textContent=msg.speaker+':';
-      el.className='line-speaker sp-inter';
-      el.onclick=null;
-    });
+    document.querySelectorAll('.sp-unknown').forEach(function(el){el.textContent=msg.speaker+':';el.className='line-speaker sp-inter';el.onclick=null;});
   }
   if(type==='VISTOP_LANG_CHANGE')applyLang();
 });
