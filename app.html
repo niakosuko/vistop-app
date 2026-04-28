@@ -252,16 +252,46 @@ window.AppState=AppState;
 function getTitularName(){var t=VISTOP.get('titular',{});return(t&&t.nombre)?t.nombre.split(' ')[0]:'Titular';}
 function updateStepIndicators(){var titular=VISTOP.get('titular',{})||{},calibrado=VISTOP.get('calibrado',false);var ok=!!(titular.nombre&&titular.nombre.trim().length>0);var dotT=document.getElementById('dot-titular'),dotC=document.getElementById('dot-calibrar');var btnT=document.querySelector('[data-module="titular.html"]'),btnC=document.querySelector('[data-module="index.html"]');dotT.style.display=ok?'none':'block';ok?btnT.classList.remove('pending'):btnT.classList.add('pending');dotC.style.display=calibrado?'none':'block';calibrado?btnC.classList.remove('pending'):btnC.classList.add('pending');}
 
-/* ══ MOTOR DE VOZ — GUARDAR SOLO EN onend ══ */
-/* 
-   ESTRATEGIA DEFINITIVA:
-   - Durante la sesión: acumulamos el texto MÁS LARGO recibido como final
-   - Al terminar la sesión (onend): guardamos ESE texto UNA SOLA VEZ
-   - Así aunque Android mande 10 "finales" distintos, solo se guarda 1
-*/
+/* ══ MOTOR DE VOZ — ANTI DUPLICADO DEFINITIVO ══ */
 var textoMasLargo = '';
 var speakerMasLargo = '';
 var SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function guardarEnMemoria(texto, speaker) {
+  if(!texto || texto.length < 2) return;
+  var memoria = VISTOP.get('memoria', []) || [];
+  var ahora = Date.now();
+  /* Comparar con los últimos 5 registros en los últimos 15 segundos */
+  var esRepetido = false;
+  var t1 = texto.toLowerCase().trim();
+  for(var i = memoria.length - 1; i >= Math.max(0, memoria.length - 5); i--) {
+    if((ahora - memoria[i].ts) > 15000) break;
+    var t2 = memoria[i].text.toLowerCase().trim();
+    /* Es repetido si son iguales, o uno contiene al otro */
+    if(t1 === t2 || t1.indexOf(t2) !== -1 || t2.indexOf(t1) !== -1) {
+      /* Si el nuevo es más largo, reemplazar el viejo */
+      if(t1.length > t2.length) {
+        memoria[i].text = texto;
+        VISTOP.save('memoria', memoria);
+        /* Notificar al frame que hubo un cambio */
+        var frame = document.getElementById('module-frame');
+        if(frame && frame.contentWindow) {
+          try{ frame.contentWindow.postMessage({type:'VISTOP_SPEAKER_IDENTIFIED', speaker:speaker}, '*'); }catch(e){}
+        }
+      }
+      esRepetido = true;
+      break;
+    }
+  }
+  if(!esRepetido) {
+    VISTOP.append('memoria', {
+      id: ahora.toString() + Math.random().toString(36).slice(2,6),
+      speaker: speaker,
+      text: texto,
+      ts: ahora
+    });
+  }
+}
 
 function initRecognition(){
   if(!SpeechAPI){setMicStatus('error',NAV_T[getLang()].inactivo);return;}
@@ -272,7 +302,6 @@ function initRecognition(){
   r.lang=(VISTOP.get('titular',{})||{}).idioma||'es-AR';
 
   r.onstart=function(){
-    /* Limpiar acumulado al iniciar sesión nueva */
     textoMasLargo='';
     speakerMasLargo='';
     setMicStatus('active',NAV_T[getLang()].escuchando);
@@ -290,16 +319,16 @@ function initRecognition(){
       var fin=event.results[i].isFinal;
       if(!tx)continue;
 
-      /* Siempre enviar al frame para mostrar en pantalla */
+      /* Enviar al frame para mostrar en pantalla */
       var frame=document.getElementById('module-frame');
       if(frame&&frame.contentWindow){
         try{frame.contentWindow.postMessage({type:'VISTOP_TRANSCRIPT',text:tx,isFinal:fin,timestamp:Date.now(),speaker:speaker},'*');}catch(e){}
       }
 
-      /* Solo acumular los finales — guardamos el más largo */
-      if(fin&&tx.length>textoMasLargo.length){
-        textoMasLargo=tx;
-        speakerMasLargo=speaker;
+      /* Acumular solo el texto final más largo de esta sesión */
+      if(fin && tx.length > textoMasLargo.length){
+        textoMasLargo = tx;
+        speakerMasLargo = speaker;
       }
     }
   };
@@ -310,20 +339,13 @@ function initRecognition(){
   };
 
   r.onend=function(){
-    /* GUARDAR UNA SOLA VEZ al terminar la sesión */
-    if(textoMasLargo&&textoMasLargo.length>1){
-      VISTOP.append('memoria',{
-        id:Date.now().toString()+Math.random().toString(36).slice(2,6),
-        speaker:speakerMasLargo||getTitularName(),
-        text:textoMasLargo,
-        ts:Date.now()
-      });
+    /* Guardar al terminar la sesión — con verificación anti-duplicado */
+    if(textoMasLargo && textoMasLargo.length > 1){
+      guardarEnMemoria(textoMasLargo, speakerMasLargo || getTitularName());
     }
-    /* Limpiar para la próxima sesión */
     textoMasLargo='';
     speakerMasLargo='';
 
-    /* Reiniciar si corresponde */
     if(AppState.micStatus==='active'&&!AppState.isSpeaking){
       try{r.start();}catch(e){}
     }else if(AppState.micStatus!=='active'){
