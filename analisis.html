@@ -65,6 +65,7 @@
   .escuchar-grande{width:100%;padding:14px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;margin-top:4px;}
   .escuchar-grande.turak{background:rgba(0,212,255,0.12);color:var(--turak);border:1px solid rgba(0,212,255,0.25);}
   .escuchar-grande.cirak{background:rgba(200,159,255,0.12);color:var(--cirak);border:1px solid rgba(200,159,255,0.25);}
+  .escuchar-grande.juntos{background:rgba(255,183,71,0.12);color:#FFB347;border:1px solid rgba(255,183,71,0.25);}
   .escuchar-grande.hablando{opacity:0.7;}
   .escuchar-grande:active{transform:scale(0.97);}
   .mas-btn{width:100%;padding:14px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-bottom:16px;display:none;}
@@ -72,6 +73,9 @@
   .mas-btn:active{background:rgba(255,255,255,0.1);color:#fff;}
   .voice-section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;margin-bottom:20px;}
   .voice-label{font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;}
+  .voice-row{display:flex;gap:10px;flex-direction:column;}
+  .voice-item{display:flex;flex-direction:column;gap:6px;}
+  .voice-item-label{font-size:12px;color:rgba(255,255,255,0.4);}
   .voice-select{width:100%;padding:11px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;-webkit-appearance:none;cursor:pointer;}
   .voice-select option{background:#0D1628;}
   .no-memory{display:none;flex-direction:column;align-items:center;gap:12px;padding:28px 20px;text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-card);margin-bottom:20px;}
@@ -82,6 +86,10 @@
   .juntos-label{font-family:var(--font-display);font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.08em;}
   .agotado{text-align:center;padding:16px;font-size:13px;color:rgba(255,255,255,0.35);font-style:italic;display:none;}
   .agotado.visible{display:block;}
+  .hablando-chip{display:none;align-items:center;gap:8px;padding:8px 16px;background:rgba(255,183,71,0.1);border:1px solid rgba(255,183,71,0.3);border-radius:var(--radius-pill);font-family:var(--font-display);font-size:12px;font-weight:700;color:#FFB347;margin-bottom:12px;}
+  .hablando-chip.visible{display:flex;}
+  .hablando-dot{width:6px;height:6px;border-radius:50%;background:#FFB347;animation:pulse-dot 1.5s ease-in-out infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
 </style>
 </head>
 <body>
@@ -119,6 +127,8 @@
     <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
     <div class="loading-text" id="loading-text">Analizando tu vida...</div>
   </div>
+
+  <!-- RESULTADO TURAK -->
   <div class="result-card turak" id="result-turak">
     <div class="result-header">
       <div class="result-icon">⚡</div>
@@ -130,11 +140,14 @@
       <span id="escuchar-label-turak">Escuchar a Turak</span>
     </button>
   </div>
+
   <div class="juntos-divider" id="juntos-divider" style="display:none;">
     <div class="juntos-line"></div>
     <div class="juntos-label">CIRAK</div>
     <div class="juntos-line"></div>
   </div>
+
+  <!-- RESULTADO CIRAK -->
   <div class="result-card cirak" id="result-cirak">
     <div class="result-header">
       <div class="result-icon">🌙</div>
@@ -146,104 +159,60 @@
       <span id="escuchar-label-cirak">Escuchar a Cirak</span>
     </button>
   </div>
+
+  <!-- BOTÓN JUNTOS ESCUCHAR -->
+  <button type="button" class="escuchar-grande juntos" id="escuchar-juntos" style="display:none;" onclick="toggleSpeechJuntos()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+    <span id="escuchar-label-juntos">Escuchar los dos</span>
+  </button>
+
+  <!-- CHIP QUIÉN HABLA AHORA -->
+  <div class="hablando-chip" id="hablando-chip">
+    <div class="hablando-dot"></div>
+    <span id="hablando-chip-label">Hablando...</span>
+  </div>
+
   <button type="button" class="mas-btn" id="mas-btn" onclick="analizar()">+ Pedir otra devolución</button>
   <div class="agotado" id="agotado">Llegaste al límite de devoluciones por sesión.</div>
+
+  <!-- VOCES -->
   <div class="voice-section">
-    <div class="voice-label">Voz de devolución</div>
-    <select class="voice-select" id="voice-select" onchange="guardarVoz()"><option value="">Voz por defecto</option></select>
+    <div class="voice-label">Voces de devolución</div>
+    <div class="voice-row">
+      <div class="voice-item">
+        <div class="voice-item-label">⚡ Voz de Turak</div>
+        <select class="voice-select" id="voice-turak" onchange="guardarVoz('turak')"><option value="">Voz por defecto</option></select>
+      </div>
+      <div class="voice-item">
+        <div class="voice-item-label">🌙 Voz de Cirak</div>
+        <select class="voice-select" id="voice-cirak" onchange="guardarVoz('cirak')"><option value="">Voz por defecto</option></select>
+      </div>
+    </div>
   </div>
 </div>
 <script>
-/* ══ STORAGE — lee directo de localStorage si no hay parent ══ */
-var VISTOP = (function() {
-  var parent = window.parent && window.parent !== window ? window.parent.VISTOP : null;
-  if (parent && typeof parent.get === 'function') return parent;
+/* ══ STORAGE ══ */
+var VISTOP = (function(){
+  var p = window.parent && window.parent !== window ? window.parent.VISTOP : null;
+  if(p && typeof p.get === 'function') return p;
   return {
-    get: function(k, fb) {
-      try {
-        var r = localStorage.getItem('vistop_' + k);
-        return r !== null ? JSON.parse(r) : (fb !== undefined ? fb : null);
-      } catch(e) { return fb !== undefined ? fb : null; }
-    },
-    save: function(k, v) {
-      try { localStorage.setItem('vistop_' + k, JSON.stringify(v)); } catch(e) {}
-    },
-    append: function(k, item) {
-      try {
-        var a = JSON.parse(localStorage.getItem('vistop_' + k) || '[]');
-        a.push(item);
-        localStorage.setItem('vistop_' + k, JSON.stringify(a));
-      } catch(e) {}
-    }
+    get: function(k,fb){ try{ var r=localStorage.getItem('vistop_'+k); return r!==null?JSON.parse(r):(fb!==undefined?fb:null); }catch(e){ return fb!==undefined?fb:null; } },
+    save: function(k,v){ try{ localStorage.setItem('vistop_'+k,JSON.stringify(v)); }catch(e){} },
+    append: function(k,item){ try{ var a=JSON.parse(localStorage.getItem('vistop_'+k)||'[]'); a.push(item); localStorage.setItem('vistop_'+k,JSON.stringify(a)); }catch(e){} }
   };
 })();
 
 var modoActual='turak', longitud='media', devolucionesHoy=0;
 var MAX_DEVOLUCIONES=5;
-var vocesDisponibles=[], hablandoTurak=false, hablandoCirak=false, uttTurak=null, uttCirak=null;
+var vocesDisponibles=[];
+var hablandoTurak=false, hablandoCirak=false, hablandoJuntos=false;
+var uttActual=null;
 
-var MODOS = {
+var MODOS={
   turak:  {icon:'⚡', color:'turak',  nombre:'Turak',         sub:'Psicológico · Coaching · Astrológico · Espiritual'},
   cirak:  {icon:'🌙',color:'cirak',  nombre:'Cirak',         sub:'Espiritual · Relacional · Astrológico · Emocional'},
   juntos: {icon:'✨', color:'juntos', nombre:'Turak & Cirak', sub:'Análisis integral conjunto'}
 };
-
-function init(){
-  setModo('turak');
-  setLongitud('media');
-  cargarVoces();
-  window.speechSynthesis.onvoiceschanged = cargarVoces;
-  var memoria = VISTOP.get('memoria', []) || [];
-  if(!memoria.length){
-    document.getElementById('no-memory').classList.add('visible');
-    document.getElementById('analyze-btn').disabled = true;
-  }
-  actualizarCounter();
-}
-
-function setModo(modo){
-  modoActual = modo;
-  ['turak','cirak','juntos'].forEach(function(m){
-    document.getElementById('btn-'+m).className = 'modo-btn'+(m===modo?' sel-'+m:'');
-  });
-  var cfg = MODOS[modo];
-  document.getElementById('desc-icon').textContent = cfg.icon;
-  document.getElementById('desc-icon').className = 'desc-icon '+cfg.color;
-  document.getElementById('desc-name').textContent = cfg.nombre;
-  document.getElementById('desc-name').className = 'desc-name '+cfg.color;
-  document.getElementById('desc-sub').textContent = cfg.sub;
-  document.getElementById('analyze-btn').className = 'analyze-btn '+cfg.color;
-  document.getElementById('analyze-label').textContent =
-    modo==='turak'?'Analizar con Turak':modo==='cirak'?'Analizar con Cirak':'Análisis conjunto';
-  ocultarResultados();
-}
-
-function setLongitud(l){
-  longitud = l;
-  ['corta','media','larga'].forEach(function(x){
-    document.getElementById('long-'+x).className = 'long-btn'+(x===l?' active':'');
-  });
-}
-
-function actualizarCounter(){
-  var chip = document.getElementById('counter-chip');
-  chip.textContent = devolucionesHoy+' / '+MAX_DEVOLUCIONES;
-  chip.className = 'counter-chip'+(devolucionesHoy>0?' activo':'');
-  var masBtn = document.getElementById('mas-btn');
-  var agotado = document.getElementById('agotado');
-  if(devolucionesHoy>=MAX_DEVOLUCIONES){
-    masBtn.classList.remove('visible');
-    agotado.classList.add('visible');
-    document.getElementById('analyze-btn').disabled = true;
-  } else if(devolucionesHoy>0){
-    masBtn.classList.add('visible');
-    masBtn.textContent = '+ Pedir otra devolución ('+(MAX_DEVOLUCIONES-devolucionesHoy)+' restantes)';
-    agotado.classList.remove('visible');
-  } else {
-    masBtn.classList.remove('visible');
-    agotado.classList.remove('visible');
-  }
-}
 
 var SIGNOS=[
   {nombre:'Capricornio',desde:[12,22],hasta:[1,19]},{nombre:'Acuario',desde:[1,20],hasta:[2,18]},
@@ -255,128 +224,170 @@ var SIGNOS=[
 ];
 
 function getSigno(d){
-  if(!d) return null;
-  var dt=new Date(d+'T12:00:00'), mes=dt.getMonth()+1, dia=dt.getDate();
+  if(!d)return null;
+  var dt=new Date(d+'T12:00:00'),mes=dt.getMonth()+1,dia=dt.getDate();
   for(var i=0;i<SIGNOS.length;i++){
-    var s=SIGNOS[i], dm=s.desde[0], dd=s.desde[1], hm=s.hasta[0], hd=s.hasta[1];
-    if(dm===hm){ if(mes===dm&&dia>=dd&&dia<=hd) return s; }
-    else { if((mes===dm&&dia>=dd)||(mes===hm&&dia<=hd)) return s; }
+    var s=SIGNOS[i],dm=s.desde[0],dd=s.desde[1],hm=s.hasta[0],hd=s.hasta[1];
+    if(dm===hm){if(mes===dm&&dia>=dd&&dia<=hd)return s;}
+    else{if((mes===dm&&dia>=dd)||(mes===hm&&dia<=hd))return s;}
   }
   return SIGNOS[0];
 }
 
+function init(){
+  setModo('turak'); setLongitud('media');
+  cargarVoces();
+  window.speechSynthesis.onvoiceschanged=cargarVoces;
+  var memoria=VISTOP.get('memoria',[])||[];
+  if(!memoria.length){
+    document.getElementById('no-memory').classList.add('visible');
+    document.getElementById('analyze-btn').disabled=true;
+  }
+  actualizarCounter();
+}
+
+function setModo(modo){
+  modoActual=modo;
+  ['turak','cirak','juntos'].forEach(function(m){
+    document.getElementById('btn-'+m).className='modo-btn'+(m===modo?' sel-'+m:'');
+  });
+  var cfg=MODOS[modo];
+  document.getElementById('desc-icon').textContent=cfg.icon;
+  document.getElementById('desc-icon').className='desc-icon '+cfg.color;
+  document.getElementById('desc-name').textContent=cfg.nombre;
+  document.getElementById('desc-name').className='desc-name '+cfg.color;
+  document.getElementById('desc-sub').textContent=cfg.sub;
+  document.getElementById('analyze-btn').className='analyze-btn '+cfg.color;
+  document.getElementById('analyze-label').textContent=
+    modo==='turak'?'Analizar con Turak':modo==='cirak'?'Analizar con Cirak':'Análisis conjunto';
+  ocultarResultados();
+}
+
+function setLongitud(l){
+  longitud=l;
+  ['corta','media','larga'].forEach(function(x){
+    document.getElementById('long-'+x).className='long-btn'+(x===l?' active':'');
+  });
+}
+
+function actualizarCounter(){
+  var chip=document.getElementById('counter-chip');
+  chip.textContent=devolucionesHoy+' / '+MAX_DEVOLUCIONES;
+  chip.className='counter-chip'+(devolucionesHoy>0?' activo':'');
+  var masBtn=document.getElementById('mas-btn');
+  var agotado=document.getElementById('agotado');
+  if(devolucionesHoy>=MAX_DEVOLUCIONES){
+    masBtn.classList.remove('visible');
+    agotado.classList.add('visible');
+    document.getElementById('analyze-btn').disabled=true;
+  } else if(devolucionesHoy>0){
+    masBtn.classList.add('visible');
+    masBtn.textContent='+ Pedir otra devolución ('+(MAX_DEVOLUCIONES-devolucionesHoy)+' restantes)';
+    agotado.classList.remove('visible');
+  } else {
+    masBtn.classList.remove('visible');
+    agotado.classList.remove('visible');
+  }
+}
+
 function analizar(){
-  var memoria = VISTOP.get('memoria', []) || [];
-  var titular = VISTOP.get('titular', {}) || {};
-  var interlocutores = VISTOP.get('interlocutores', []) || [];
-
-  if(!memoria.length || devolucionesHoy>=MAX_DEVOLUCIONES) return;
-
+  var memoria=VISTOP.get('memoria',[])||[];
+  var titular=VISTOP.get('titular',{})||{};
+  var interlocutores=VISTOP.get('interlocutores',[])||[];
+  if(!memoria.length||devolucionesHoy>=MAX_DEVOLUCIONES)return;
   ocultarResultados();
   document.getElementById('loading-wrap').classList.add('visible');
-  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('analyze-btn').disabled=true;
   document.getElementById('mas-btn').classList.remove('visible');
-
   var msgs=['Analizando tu vida...','Preparando tu devolución...','Procesando tus conversaciones...','Integrando tu historial...','Profundizando el análisis...'];
-  document.getElementById('loading-text').textContent = msgs[devolucionesHoy % msgs.length];
-
+  document.getElementById('loading-text').textContent=msgs[devolucionesHoy%msgs.length];
   setTimeout(function(){
-    var resultado = generarAnalisis(titular, memoria, interlocutores);
+    var resultado=generarAnalisis(titular,memoria,interlocutores);
     document.getElementById('loading-wrap').classList.remove('visible');
     mostrarResultados(resultado);
     devolucionesHoy++;
     actualizarCounter();
-    document.getElementById('analyze-btn').disabled = devolucionesHoy >= MAX_DEVOLUCIONES;
-  }, 2000);
+    document.getElementById('analyze-btn').disabled=devolucionesHoy>=MAX_DEVOLUCIONES;
+  },2000);
 }
 
-function generarAnalisis(titular, memoria, interlocutores){
-  var nombre = titular.nombre ? titular.nombre.split(' ')[0] : '';
-  var signo = getSigno(titular.fecha_nacimiento);
-  var religion = titular.religion || '';
-  var objetivos = titular.objetivos || [];
-  var metas = titular.metas || [];
-  var textos = memoria.map(function(e){ return e.text; }).join(' ').toLowerCase();
-  var speakers = [];
+function generarAnalisis(titular,memoria,interlocutores){
+  var nombre=titular.nombre?titular.nombre.split(' ')[0]:'';
+  var signo=getSigno(titular.fecha_nacimiento);
+  var religion=titular.religion||'';
+  var objetivos=titular.objetivos||[];
+  var metas=titular.metas||[];
+  var textos=memoria.map(function(e){return e.text;}).join(' ').toLowerCase();
+  var speakers=[];
   memoria.forEach(function(e){
-    if(e.speaker && e.speaker!=='?' && e.speaker!==nombre && speakers.indexOf(e.speaker)===-1) speakers.push(e.speaker);
+    if(e.speaker&&e.speaker!=='?'&&e.speaker!==nombre&&speakers.indexOf(e.speaker)===-1) speakers.push(e.speaker);
   });
-  var totalEntradas = memoria.length;
-  var diasSet = {};
-  memoria.forEach(function(e){ diasSet[new Date(e.ts).toLocaleDateString()] = true; });
-  var diasRegistrados = Object.keys(diasSet).length;
-  var tieneConflicto = /no sé|duda|confundido|perdido|cansado|frustrado|difícil|problema|preocup/i.test(textos);
-  var tieneAccion = /voy a|quiero|necesito|tengo que|planeo|decidí|vamos|empiezo/i.test(textos);
-  var tieneEmocion = /siento|me duele|me alegra|estoy|me preocupa|extraño|amo|feliz|triste/i.test(textos);
-  var esLarga = longitud==='larga', esCorta = longitud==='corta';
+  var totalEntradas=memoria.length;
+  var diasSet={};
+  memoria.forEach(function(e){diasSet[new Date(e.ts).toLocaleDateString()]=true;});
+  var diasRegistrados=Object.keys(diasSet).length;
+  var tieneConflicto=/no sé|duda|confundido|perdido|cansado|frustrado|difícil|problema|preocup/i.test(textos);
+  var tieneAccion=/voy a|quiero|necesito|tengo que|planeo|decidí|vamos|empiezo/i.test(textos);
+  var tieneEmocion=/siento|me duele|me alegra|estoy|me preocupa|extraño|amo|feliz|triste/i.test(textos);
+  var esLarga=longitud==='larga', esCorta=longitud==='corta';
   var turakTexto='', cirakTexto='';
 
   /* ══ TURAK ══ */
   if(modoActual==='turak'||modoActual==='juntos'){
-    var t = nombre ? nombre+', ' : '';
-    if(devolucionesHoy===0) t += 'esto es lo que veo cuando miro todo lo que registraste.\n\n';
-    else if(devolucionesHoy===1) t += 'voy a ir más profundo esta vez.\n\n';
-    else t += 'hay algo que no terminé de decirte antes.\n\n';
+    var t=nombre?nombre+', ':'';
+    if(devolucionesHoy===0) t+='esto es lo que veo cuando miro todo lo que registraste.\n\n';
+    else if(devolucionesHoy===1) t+='voy a ir más profundo esta vez.\n\n';
+    else t+='hay algo que no terminé de decirte antes.\n\n';
 
-    t += 'Tenés '+totalEntradas+' registro'+(totalEntradas!==1?'s':'')+' de '+diasRegistrados+' día'+(diasRegistrados!==1?'s':'')+' diferentes. Eso ya me dice algo sobre tu constancia.\n\n';
+    t+='Tenés '+totalEntradas+' registro'+(totalEntradas!==1?'s':'')+' de '+diasRegistrados+' día'+(diasRegistrados!==1?'s':'')+' diferentes. Eso ya me dice algo sobre tu constancia.\n\n';
 
-    if(tieneConflicto) t += 'Hay momentos donde la duda aparece fuerte en lo que decís. Eso no es debilidad — es una señal de que estás procesando algo que importa. Pero cuidado: el análisis sin acción es solo un círculo.\n\n';
-    if(tieneAccion) t += 'Hay intención de moverte. Eso es bueno. La pregunta es si esa intención tiene fecha y primer paso concreto, o todavía vive solo en las palabras.\n\n';
-
-    if(speakers.length>0 && !esCorta) t += 'Las personas que aparecen en tus conversaciones — '+speakers.slice(0,3).join(', ')+' — no están ahí por casualidad. Cada vínculo que mencionás tiene peso en cómo te movés o te quedás quieto.\n\n';
-
-    if(signo && !esCorta) t += 'Como '+signo.nombre+', el momento que vivís tiene una energía particular. El día de hoy es propicio para '+(signo.nombre==='Aries'||signo.nombre==='Leo'||signo.nombre==='Sagitario'?'tomar decisiones y ejecutar':'consolidar, revisar y profundizar')+'.\n\n';
-
-    if(objetivos.length>0 && !esCorta) t += 'Tus objetivos están ahí registrados. La pregunta que te hago es simple: lo que hiciste y dijiste esta semana, ¿te acerca o te aleja de eso?\n\n';
-
-    if(esLarga && religion && religion!=='agnostico' && religion!=='ateo') t += 'Desde tu fe, cada decisión que tomás tiene un peso que va más allá de lo práctico. Lo que elegís hacer o no hacer construye quién sos frente a lo que creés.\n\n';
-
-    if(esCorta) t += 'Una sola pregunta: ¿qué acción concreta podés hacer hoy que te acerque a donde querés estar?\n\nEso es todo. Eso es Turak.';
-    else t += 'No te digo que tenés que hacer todo perfecto. Te digo que el tiempo pasa igual, con o sin movimiento. La diferencia la hacés vos.\n\nEso es Turak.';
-
-    turakTexto = t;
+    if(tieneConflicto) t+='Hay momentos donde la duda aparece fuerte en lo que decís. Eso no es debilidad — es una señal de que estás procesando algo que importa. Pero cuidado: el análisis sin acción es solo un círculo.\n\n';
+    if(tieneAccion) t+='Hay intención de moverte. Eso es bueno. La pregunta es si esa intención tiene fecha y primer paso concreto, o todavía vive solo en las palabras.\n\n';
+    if(speakers.length>0&&!esCorta) t+='Las personas que aparecen en tus conversaciones — '+speakers.slice(0,3).join(', ')+' — no están ahí por casualidad. Cada vínculo que mencionás tiene peso en cómo te movés o te quedás quieto.\n\n';
+    if(signo&&!esCorta) t+='Como '+signo.nombre+', el momento que vivís tiene una energía particular. El día de hoy es propicio para '+(signo.nombre==='Aries'||signo.nombre==='Leo'||signo.nombre==='Sagitario'?'tomar decisiones y ejecutar':'consolidar, revisar y profundizar')+'.\n\n';
+    if(objetivos.length>0&&!esCorta) t+='Tus objetivos están ahí registrados. La pregunta que te hago es simple: lo que hiciste y dijiste esta semana, ¿te acerca o te aleja de eso?\n\n';
+    if(esLarga&&religion&&religion!=='agnostico'&&religion!=='ateo') t+='Desde tu fe, cada decisión que tomás tiene un peso que va más allá de lo práctico. Lo que elegís hacer o no hacer construye quién sos frente a lo que creés.\n\n';
+    if(esCorta) t+='Una sola pregunta: ¿qué acción concreta podés hacer hoy que te acerque a donde querés estar?';
+    else t+='No te digo que tenés que hacer todo perfecto. Te digo que el tiempo pasa igual, con o sin movimiento. La diferencia la hacés vos.';
+    turakTexto=t;
   }
 
   /* ══ CIRAK ══ */
   if(modoActual==='cirak'||modoActual==='juntos'){
-    var c = nombre ? nombre+'... ' : '';
-    if(devolucionesHoy===0) c += 'me senté a escucharte. Todo lo que registraste, cada palabra, cada conversación.\n\n';
-    else if(devolucionesHoy===1) c += 'quiero hablarte de algo que sentí y no dije antes.\n\n';
-    else c += 'hay una capa más profunda que quiero que veamos juntos.\n\n';
+    var c=nombre?nombre+'... ':'';
+    if(devolucionesHoy===0) c+='me senté a escucharte. Todo lo que registraste, cada palabra, cada conversación.\n\n';
+    else if(devolucionesHoy===1) c+='quiero hablarte de algo que sentí y no dije antes.\n\n';
+    else c+='hay una capa más profunda que quiero que veamos juntos.\n\n';
 
-    if(tieneEmocion) c += 'Hay algo que estás sintiendo y que merece espacio antes de ser resuelto. No todo lo que duele necesita una solución inmediata. A veces necesita ser simplemente reconocido.\n\n';
-
-    if(speakers.length>0 && !esCorta) c += 'Las personas que aparecen en tu vida — '+speakers.slice(0,3).join(', ')+' — forman parte de tu historia. Cada vínculo que cultivás o descuidás habla de cómo te relacionás con vos mismo también.\n\n';
-
-    if(signo) c += 'Tu signo, '+signo.nombre+', te da una forma particular de sentir el mundo. Hoy el universo te invita a '+(signo.nombre==='Cáncer'||signo.nombre==='Piscis'||signo.nombre==='Escorpio'?'confiar en tu intuición y soltar lo que ya no sirve':'conectar con lo que realmente importa y no solo lo urgente')+'.\n\n';
-
-    if(religion && religion!=='agnostico' && religion!=='ateo' && !esCorta) c += 'Tu fe es una fuente que siempre está disponible. En los momentos donde la lógica no alcanza, esa dimensión espiritual puede sostenerte de una manera que ningún análisis puede reemplazar.\n\n';
-
-    if(metas.length>0 && !esCorta) c += 'Tus metas no son solo objetivos — son promesas que te hiciste a vos mismo. Honrarlas o no honrarlas construye la relación que tenés con tu propia palabra.\n\n';
-
-    if(esLarga) c += 'Cada día que registraste es un paso de consciencia. Muchas personas viven sin mirarse. Vos elegiste mirarte. Eso tiene un valor enorme.\n\n';
-
-    if(esCorta) c += 'Date el permiso de estar en el proceso sin apurarte. El camino se hace caminando.\n\nEso es Cirak.';
-    else c += 'Lo que escucho en vos no es una persona perdida. Es una persona que está encontrando su camino. Y eso, aunque a veces no se siente así, es exactamente donde tenés que estar.\n\nEso es Cirak.';
-
-    cirakTexto = c;
+    if(tieneEmocion) c+='Hay algo que estás sintiendo y que merece espacio antes de ser resuelto. No todo lo que duele necesita una solución inmediata. A veces necesita ser simplemente reconocido.\n\n';
+    if(speakers.length>0&&!esCorta) c+='Las personas que aparecen en tu vida — '+speakers.slice(0,3).join(', ')+' — forman parte de tu historia. Cada vínculo que cultivás o descuidás habla de cómo te relacionás con vos mismo también.\n\n';
+    if(signo) c+='Tu signo, '+signo.nombre+', te da una forma particular de sentir el mundo. Hoy el universo te invita a '+(signo.nombre==='Cáncer'||signo.nombre==='Piscis'||signo.nombre==='Escorpio'?'confiar en tu intuición y soltar lo que ya no sirve':'conectar con lo que realmente importa y no solo lo urgente')+'.\n\n';
+    if(religion&&religion!=='agnostico'&&religion!=='ateo'&&!esCorta) c+='Tu fe es una fuente que siempre está disponible. En los momentos donde la lógica no alcanza, esa dimensión espiritual puede sostenerte de una manera que ningún análisis puede reemplazar.\n\n';
+    if(metas.length>0&&!esCorta) c+='Tus metas no son solo objetivos — son promesas que te hiciste a vos mismo. Honrarlas o no honrarlas construye la relación que tenés con tu propia palabra.\n\n';
+    if(esLarga) c+='Cada día que registraste es un paso de consciencia. Muchas personas viven sin mirarse. Vos elegiste mirarte. Eso tiene un valor enorme.\n\n';
+    if(esCorta) c+='Date el permiso de estar en el proceso sin apurarte. El camino se hace caminando.';
+    else c+='Lo que escucho en vos no es una persona perdida. Es una persona que está encontrando su camino. Y eso, aunque a veces no se siente así, es exactamente donde tenés que estar.';
+    cirakTexto=c;
   }
 
-  return {turak: turakTexto, cirak: cirakTexto};
+  return {turak:turakTexto, cirak:cirakTexto};
 }
 
 function mostrarResultados(resultado){
-  var mostrarTurak = modoActual==='turak'||modoActual==='juntos';
-  var mostrarCirak = modoActual==='cirak'||modoActual==='juntos';
-  if(mostrarTurak && resultado.turak){
-    document.getElementById('text-turak').textContent = resultado.turak;
+  var mostrarTurak=modoActual==='turak'||modoActual==='juntos';
+  var mostrarCirak=modoActual==='cirak'||modoActual==='juntos';
+  if(mostrarTurak&&resultado.turak){
+    document.getElementById('text-turak').textContent=resultado.turak;
     document.getElementById('result-turak').classList.add('visible');
   }
-  if(modoActual==='juntos' && resultado.turak && resultado.cirak){
-    document.getElementById('juntos-divider').style.display = 'flex';
+  if(modoActual==='juntos'&&resultado.turak&&resultado.cirak){
+    document.getElementById('juntos-divider').style.display='flex';
+    document.getElementById('escuchar-turak').style.display='none';
+    document.getElementById('escuchar-cirak').style.display='none';
+    document.getElementById('escuchar-juntos').style.display='flex';
   }
-  if(mostrarCirak && resultado.cirak){
-    document.getElementById('text-cirak').textContent = resultado.cirak;
+  if(mostrarCirak&&resultado.cirak){
+    document.getElementById('text-cirak').textContent=resultado.cirak;
     document.getElementById('result-cirak').classList.add('visible');
   }
 }
@@ -384,86 +395,210 @@ function mostrarResultados(resultado){
 function ocultarResultados(){
   document.getElementById('result-turak').classList.remove('visible');
   document.getElementById('result-cirak').classList.remove('visible');
-  document.getElementById('juntos-divider').style.display = 'none';
-  stopSpeech('turak'); stopSpeech('cirak');
+  document.getElementById('juntos-divider').style.display='none';
+  document.getElementById('escuchar-juntos').style.display='none';
+  document.getElementById('escuchar-turak').style.display='flex';
+  document.getElementById('escuchar-cirak').style.display='flex';
+  document.getElementById('hablando-chip').classList.remove('visible');
+  detenerTodo();
 }
 
+/* ══ VOCES ══ */
 function cargarVoces(){
-  var voces = window.speechSynthesis.getVoices();
-  var sel = document.getElementById('voice-select');
-  var saved = VISTOP.get('voz_preferida','');
-  sel.innerHTML = '<option value="">Voz por defecto</option>';
-  vocesDisponibles = voces;
-  voces.forEach(function(v){
-    var o = document.createElement('option');
-    o.value = v.name; o.textContent = v.name+' ('+v.lang+')';
-    if(v.name===saved) o.selected = true;
-    sel.appendChild(o);
+  var voces=window.speechSynthesis.getVoices();
+  vocesDisponibles=voces;
+  var savedT=VISTOP.get('voz_turak','');
+  var savedC=VISTOP.get('voz_cirak','');
+  ['turak','cirak'].forEach(function(quien){
+    var sel=document.getElementById('voice-'+quien);
+    var saved=quien==='turak'?savedT:savedC;
+    sel.innerHTML='<option value="">Voz por defecto</option>';
+    voces.forEach(function(v){
+      var o=document.createElement('option');
+      o.value=v.name; o.textContent=v.name+' ('+v.lang+')';
+      if(v.name===saved)o.selected=true;
+      sel.appendChild(o);
+    });
   });
 }
 
-function guardarVoz(){ VISTOP.save('voz_preferida', document.getElementById('voice-select').value); }
+function guardarVoz(quien){
+  var val=document.getElementById('voice-'+quien).value;
+  VISTOP.save('voz_'+quien, val);
+}
 
-function toggleSpeech(quien){
+function getVozPara(quien){
+  var nombre=VISTOP.get('voz_'+quien,'');
+  if(nombre){
+    var v=vocesDisponibles.filter(function(v){return v.name===nombre;});
+    if(v.length) return v[0];
+  }
+  /* Intentar encontrar voz por género automáticamente */
+  var lang=(VISTOP.get('titular',{})||{}).idioma||'es';
+  var vocesFiltradas=vocesDisponibles.filter(function(v){return v.lang.startsWith(lang.slice(0,2));});
+  if(!vocesFiltradas.length) vocesFiltradas=vocesDisponibles;
   if(quien==='turak'){
-    if(hablandoTurak){ stopSpeech('turak'); return; }
-    var texto = document.getElementById('text-turak').textContent;
-    if(texto) speakText(texto,'turak');
+    /* Buscar voz masculina */
+    var masc=vocesFiltradas.filter(function(v){return /male|hombre|masculin|jorge|pablo|diego|carlos|juan|miguel/i.test(v.name);});
+    if(masc.length) return masc[0];
+    return vocesFiltradas[0]||null;
   } else {
-    if(hablandoCirak){ stopSpeech('cirak'); return; }
-    var texto = document.getElementById('text-cirak').textContent;
-    if(texto) speakText(texto,'cirak');
+    /* Buscar voz femenina */
+    var fem=vocesFiltradas.filter(function(v){return /female|mujer|femenin|maria|elena|laura|sofia|ana|lucia/i.test(v.name);});
+    if(fem.length) return fem[0];
+    /* Tomar una voz diferente a la primera */
+    return vocesFiltradas[1]||vocesFiltradas[0]||null;
   }
 }
 
-function speakText(texto, quien){
-  stopSpeech(quien);
-  if(window.parent && window.parent !== window) window.parent.postMessage({type:'VISTOP_SPEAKING_START'},'*');
-  var utt = new SpeechSynthesisUtterance(texto);
-  var vn = VISTOP.get('voz_preferida','');
-  if(vn){ var v=vocesDisponibles.find(function(v){ return v.name===vn; }); if(v) utt.voice=v; }
-  var titular = VISTOP.get('titular',{}) || {};
-  utt.lang = titular.idioma || 'es-AR';
-  utt.rate = 0.9;
-  utt.pitch = quien==='cirak' ? 1.1 : 0.92;
-  utt.onstart = function(){
-    if(quien==='turak'){ hablandoTurak=true; setSpeakUI('turak',true); }
-    else { hablandoCirak=true; setSpeakUI('cirak',true); }
+/* ══ CONTROLES DE VOZ INDIVIDUALES ══ */
+function toggleSpeech(quien){
+  if(quien==='turak'){
+    if(hablandoTurak){detenerTodo();return;}
+    var texto=document.getElementById('text-turak').textContent;
+    if(texto) hablarUno('turak',texto);
+  } else {
+    if(hablandoCirak){detenerTodo();return;}
+    var texto=document.getElementById('text-cirak').textContent;
+    if(texto) hablarUno('cirak',texto);
+  }
+}
+
+function hablarUno(quien,texto){
+  detenerTodo();
+  notificarParent(true);
+  var utt=new SpeechSynthesisUtterance(texto);
+  var voz=getVozPara(quien);
+  if(voz) utt.voice=voz;
+  var titular=VISTOP.get('titular',{})||{};
+  utt.lang=titular.idioma||'es-AR';
+  utt.rate=0.9;
+  utt.pitch=quien==='cirak'?1.15:0.88;
+  utt.onstart=function(){
+    if(quien==='turak'){hablandoTurak=true;setSpeakUI('turak',true);}
+    else{hablandoCirak=true;setSpeakUI('cirak',true);}
   };
-  utt.onend = function(){
-    if(quien==='turak'){ hablandoTurak=false; setSpeakUI('turak',false); uttTurak=null; }
-    else { hablandoCirak=false; setSpeakUI('cirak',false); uttCirak=null; }
-    setTimeout(function(){ if(window.parent&&window.parent!==window) window.parent.postMessage({type:'VISTOP_SPEAKING_END'},'*'); },600);
+  utt.onend=function(){
+    if(quien==='turak'){hablandoTurak=false;setSpeakUI('turak',false);}
+    else{hablandoCirak=false;setSpeakUI('cirak',false);}
+    uttActual=null;
+    notificarParent(false);
   };
-  utt.onerror = function(){
-    if(quien==='turak'){ hablandoTurak=false; setSpeakUI('turak',false); uttTurak=null; }
-    else { hablandoCirak=false; setSpeakUI('cirak',false); uttCirak=null; }
-    setTimeout(function(){ if(window.parent&&window.parent!==window) window.parent.postMessage({type:'VISTOP_SPEAKING_END'},'*'); },300);
+  utt.onerror=function(){
+    hablandoTurak=false;hablandoCirak=false;
+    setSpeakUI('turak',false);setSpeakUI('cirak',false);
+    uttActual=null;
+    notificarParent(false);
   };
-  if(quien==='turak') uttTurak=utt; else uttCirak=utt;
+  uttActual=utt;
   window.speechSynthesis.speak(utt);
 }
 
-function stopSpeech(quien){
+/* ══ CONTROL JUNTOS ══ */
+function toggleSpeechJuntos(){
+  if(hablandoJuntos){
+    detenerTodo();
+    return;
+  }
+  var textoT=document.getElementById('text-turak').textContent;
+  var textoC=document.getElementById('text-cirak').textContent;
+  if(!textoT&&!textoC)return;
+  hablarJuntos(textoT,textoC);
+}
+
+function hablarJuntos(textoT,textoC){
+  detenerTodo();
+  hablandoJuntos=true;
+  document.getElementById('escuchar-label-juntos').textContent='Detener';
+  document.getElementById('escuchar-juntos').classList.add('hablando');
+  notificarParent(true);
+
+  /* Primero habla Turak */
+  var uttT=new SpeechSynthesisUtterance(textoT);
+  var vozT=getVozPara('turak');
+  if(vozT) uttT.voice=vozT;
+  var titular=VISTOP.get('titular',{})||{};
+  uttT.lang=titular.idioma||'es-AR';
+  uttT.rate=0.9; uttT.pitch=0.88;
+
+  uttT.onstart=function(){
+    document.getElementById('hablando-chip').classList.add('visible');
+    document.getElementById('hablando-chip-label').textContent='⚡ Turak está hablando...';
+  };
+
+  uttT.onend=function(){
+    if(!hablandoJuntos)return;
+    /* Pausa entre los dos */
+    setTimeout(function(){
+      if(!hablandoJuntos)return;
+      /* Ahora habla Cirak */
+      var uttC=new SpeechSynthesisUtterance(textoC);
+      var vozC=getVozPara('cirak');
+      if(vozC) uttC.voice=vozC;
+      uttC.lang=titular.idioma||'es-AR';
+      uttC.rate=0.9; uttC.pitch=1.15;
+      uttC.onstart=function(){
+        document.getElementById('hablando-chip-label').textContent='🌙 Cirak está hablando...';
+      };
+      uttC.onend=function(){
+        hablandoJuntos=false;
+        document.getElementById('escuchar-label-juntos').textContent='Escuchar los dos';
+        document.getElementById('escuchar-juntos').classList.remove('hablando');
+        document.getElementById('hablando-chip').classList.remove('visible');
+        uttActual=null;
+        notificarParent(false);
+      };
+      uttC.onerror=function(){
+        hablandoJuntos=false;
+        document.getElementById('escuchar-label-juntos').textContent='Escuchar los dos';
+        document.getElementById('escuchar-juntos').classList.remove('hablando');
+        document.getElementById('hablando-chip').classList.remove('visible');
+        uttActual=null;
+        notificarParent(false);
+      };
+      uttActual=uttC;
+      window.speechSynthesis.speak(uttC);
+    },800);
+  };
+
+  uttT.onerror=function(){
+    hablandoJuntos=false;
+    document.getElementById('escuchar-label-juntos').textContent='Escuchar los dos';
+    document.getElementById('escuchar-juntos').classList.remove('hablando');
+    document.getElementById('hablando-chip').classList.remove('visible');
+    uttActual=null;
+    notificarParent(false);
+  };
+
+  uttActual=uttT;
+  window.speechSynthesis.speak(uttT);
+}
+
+function detenerTodo(){
   window.speechSynthesis.cancel();
-  if(quien==='turak'){
-    hablandoTurak=false; setSpeakUI('turak',false);
-    if(uttTurak){ uttTurak=null; setTimeout(function(){ if(window.parent&&window.parent!==window) window.parent.postMessage({type:'VISTOP_SPEAKING_END'},'*'); },300); }
-  } else {
-    hablandoCirak=false; setSpeakUI('cirak',false);
-    if(uttCirak){ uttCirak=null; setTimeout(function(){ if(window.parent&&window.parent!==window) window.parent.postMessage({type:'VISTOP_SPEAKING_END'},'*'); },300); }
+  hablandoTurak=false; hablandoCirak=false; hablandoJuntos=false;
+  uttActual=null;
+  setSpeakUI('turak',false); setSpeakUI('cirak',false);
+  document.getElementById('escuchar-label-juntos').textContent='Escuchar los dos';
+  document.getElementById('escuchar-juntos').classList.remove('hablando');
+  document.getElementById('hablando-chip').classList.remove('visible');
+}
+
+function setSpeakUI(quien,speaking){
+  var btn=document.getElementById('escuchar-'+quien);
+  var lbl=document.getElementById('escuchar-label-'+quien);
+  if(speaking){btn.classList.add('hablando');lbl.textContent='Detener';}
+  else{btn.classList.remove('hablando');lbl.textContent=quien==='turak'?'Escuchar a Turak':'Escuchar a Cirak';}
+}
+
+function notificarParent(hablando){
+  if(window.parent&&window.parent!==window){
+    window.parent.postMessage({type:hablando?'VISTOP_SPEAKING_START':'VISTOP_SPEAKING_END'},'*');
   }
 }
 
-function setSpeakUI(quien, speaking){
-  var btn = document.getElementById('escuchar-'+quien);
-  var lbl = document.getElementById('escuchar-label-'+quien);
-  if(speaking){ btn.classList.add('hablando'); lbl.textContent='Detener'; }
-  else{ btn.classList.remove('hablando'); lbl.textContent=quien==='turak'?'Escuchar a Turak':'Escuchar a Cirak'; }
-}
-
-window.addEventListener('message', function(event){
-  if(event.data && event.data.type==='VISTOP_LANG_CHANGE') cargarVoces();
+window.addEventListener('message',function(event){
+  if(event.data&&event.data.type==='VISTOP_LANG_CHANGE') cargarVoces();
 });
 
 init();
