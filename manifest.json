@@ -1,51 +1,44 @@
-{
-  "name": "VISTOP",
-  "short_name": "VISTOP",
-  "description": "Tu agente de escucha, memoria y análisis personal.",
-  "start_url": "/vistop-app/app.html",
-  "scope": "/vistop-app/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#050A14",
-  "theme_color": "#00D4FF",
-  "lang": "es",
-  "dir": "ltr",
-  "categories": ["productivity", "lifestyle"],
-  "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "VISTOP"
-    }
-  ],
-  "display_override": ["standalone", "minimal-ui"],
-  "prefer_related_applications": false
-}
+const CACHE = 'vistop-v1';
+const ARCHIVOS = [
+  '/vistop-app/app.html',
+  '/vistop-app/escucha.html',
+  '/vistop-app/titular.html',
+  '/vistop-app/memoria.html',
+  '/vistop-app/analisis.html',
+  '/vistop-app/interlocutores.html',
+  '/vistop-app/index.html',
+  '/vistop-app/manifest.json',
+  '/vistop-app/icons/icon-192.png',
+  '/vistop-app/icons/icon-512.png'
+];
+
+self.addEventListener('install', function(e) {
+  e.waitUntil(
+    caches.open(CACHE).then(function(cache) {
+      return cache.addAll(ARCHIVOS);
+    })
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', function(e) {
+  e.waitUntil(
+    caches.keys().then(function(keys) {
+      return Promise.all(
+        keys.filter(function(k) { return k !== CACHE; })
+            .map(function(k) { return caches.delete(k); })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', function(e) {
+  e.respondWith(
+    caches.match(e.request).then(function(cached) {
+      return cached || fetch(e.request).catch(function() {
+        return caches.match('/vistop-app/app.html');
+      });
+    })
+  );
+});
