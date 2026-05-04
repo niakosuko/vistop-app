@@ -1,0 +1,28 @@
+{
+  "name": "VISTOP",
+  "short_name": "VISTOP",
+  "description": "Tu agente de escucha, memoria y análisis personal.",
+  "start_url": "https://niakosuko.github.io/vistop-app/app.html",
+  "scope": "https://niakosuko.github.io/vistop-app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050A14",
+  "theme_color": "#00D4FF",
+  "lang": "es",
+  "categories": ["productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "https://niakosuko.github.io/vistop-app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://niakosuko.github.io/vistop-app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "prefer_related_applications": false
+}
