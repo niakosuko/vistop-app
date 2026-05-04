@@ -12,12 +12,7 @@
   html,body{width:100%;height:100%;background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:16px;line-height:1.5;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
   .screen{display:flex;flex-direction:column;height:100%;}
   .top-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.08);gap:8px;}
-  .top-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;}
-  .mic-toggle{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);cursor:pointer;transition:all 0.2s;font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-secondary);user-select:none;flex-shrink:0;}
-  .mic-toggle.active{border-color:rgba(0,212,255,0.6);color:var(--cyan);background:rgba(0,212,255,0.1);}
-  .mic-toggle-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.3);flex-shrink:0;}
-  .mic-toggle.active .mic-toggle-dot{background:var(--cyan);box-shadow:0 0 8px rgba(0,212,255,0.8);animation:pulse-dot 2s ease-in-out infinite;}
-  @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
+  .top-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
   .speaker-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;background:rgba(255,255,255,0.02);}
   .speaker-label{font-size:12px;color:var(--text-muted);font-weight:500;flex-shrink:0;}
   .speaker-chips{display:flex;gap:6px;flex:1;overflow-x:auto;}
@@ -68,10 +63,6 @@
 <div class="screen">
   <div class="top-bar">
     <div class="top-title" id="esc-title">Escucha</div>
-    <div class="mic-toggle" id="mic-toggle" onclick="toggleMic()">
-      <div class="mic-toggle-dot"></div>
-      <span id="mic-toggle-label">Iniciar</span>
-    </div>
   </div>
   <div class="speaker-bar">
     <span class="speaker-label" id="lbl-habla">Habla:</span>
@@ -90,7 +81,7 @@
     <div class="empty-state" id="empty-state">
       <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
       <div class="empty-title" id="empty-title">Sin transcripciones aún</div>
-      <div class="empty-body" id="empty-body">Tocá Iniciar y empezá a hablar.</div>
+      <div class="empty-body" id="empty-body">Tocá el micrófono arriba y empezá a hablar.</div>
     </div>
   </div>
 </div>
@@ -111,16 +102,16 @@
 <script>
 var VISTOP=window.parent&&window.parent.VISTOP?window.parent.VISTOP:{get:function(){return null;},save:function(){},append:function(){}};
 var AppState=window.parent&&window.parent.AppState?window.parent.AppState:{};
-var micActive=false,speakerActual='titular',sessionStart=Date.now();
+var speakerActual='titular',sessionStart=Date.now();
 
 var ESC_T={
-  es:{title:'Escucha',start:'Iniciar',listening:'Escuchando',today:'Hoy',yesterday:'Ayer',empty_title:'Sin transcripciones aún',empty_body:'Tocá Iniciar y empezá a hablar.',habla:'Habla:',otro:'Otro habla',modal_title:'¿Quién habló?',modal_sub:'Identificá esta voz para registrarla',modal_or:'— o escribí un nombre nuevo —',modal_ph:'Nombre de la persona...',identificar:'Identificar',cancelar:'Cancelar'},
-  en:{title:'Listen',start:'Start',listening:'Listening',today:'Today',yesterday:'Yesterday',empty_title:'No transcriptions yet',empty_body:'Tap Start and begin speaking.',habla:'Speaking:',otro:'Someone else',modal_title:'Who spoke?',modal_sub:'Identify this voice to register it',modal_or:'— or type a new name —',modal_ph:"Person's name...",identificar:'Identify',cancelar:'Cancel'},
-  pt:{title:'Escuta',start:'Iniciar',listening:'Escutando',today:'Hoje',yesterday:'Ontem',empty_title:'Sem transcrições ainda',empty_body:'Toque em Iniciar e comece a falar.',habla:'Fala:',otro:'Outro fala',modal_title:'Quem falou?',modal_sub:'Identifique esta voz para registrá-la',modal_or:'— ou escreva um novo nome —',modal_ph:'Nome da pessoa...',identificar:'Identificar',cancelar:'Cancelar'},
-  fr:{title:'Écoute',start:'Démarrer',listening:'En écoute',today:"Aujourd'hui",yesterday:'Hier',empty_title:'Pas encore de transcriptions',empty_body:'Appuyez sur Démarrer et commencez à parler.',habla:'Parle :',otro:"Quelqu'un d'autre",modal_title:'Qui a parlé ?',modal_sub:"Identifiez cette voix pour l'enregistrer",modal_or:'— ou tapez un nouveau nom —',modal_ph:'Nom de la personne...',identificar:'Identifier',cancelar:'Annuler'},
-  de:{title:'Zuhören',start:'Starten',listening:'Hört zu',today:'Heute',yesterday:'Gestern',empty_title:'Noch keine Transkriptionen',empty_body:'Tippen Sie auf Starten und beginnen Sie zu sprechen.',habla:'Spricht:',otro:'Jemand anderes',modal_title:'Wer hat gesprochen?',modal_sub:'Identifizieren Sie diese Stimme',modal_or:'— oder geben Sie einen neuen Namen ein —',modal_ph:'Name der Person...',identificar:'Identifizieren',cancelar:'Abbrechen'},
-  it:{title:'Ascolto',start:'Inizia',listening:'In ascolto',today:'Oggi',yesterday:'Ieri',empty_title:'Nessuna trascrizione ancora',empty_body:'Tocca Inizia e inizia a parlare.',habla:'Parla:',otro:'Qualcun altro',modal_title:'Chi ha parlato?',modal_sub:'Identifica questa voce per registrarla',modal_or:'— o scrivi un nuovo nome —',modal_ph:'Nome della persona...',identificar:'Identifica',cancelar:'Annulla'},
-  ru:{title:'Слушать',start:'Начать',listening:'Слушаю',today:'Сегодня',yesterday:'Вчера',empty_title:'Транскрипций пока нет',empty_body:'Нажмите Начать и говорите.',habla:'Говорит:',otro:'Кто-то другой',modal_title:'Кто говорил?',modal_sub:'Определите этот голос для записи',modal_or:'— или введите новое имя —',modal_ph:'Имя человека...',identificar:'Определить',cancelar:'Отмена'},
+  es:{title:'Escucha',today:'Hoy',yesterday:'Ayer',empty_title:'Sin transcripciones aún',empty_body:'Tocá el micrófono arriba y empezá a hablar.',habla:'Habla:',otro:'Otro habla',modal_title:'¿Quién habló?',modal_sub:'Identificá esta voz para registrarla',modal_or:'— o escribí un nombre nuevo —',modal_ph:'Nombre de la persona...',identificar:'Identificar',cancelar:'Cancelar'},
+  en:{title:'Listen',today:'Today',yesterday:'Yesterday',empty_title:'No transcriptions yet',empty_body:'Tap the microphone above and start speaking.',habla:'Speaking:',otro:'Someone else',modal_title:'Who spoke?',modal_sub:'Identify this voice to register it',modal_or:'— or type a new name —',modal_ph:"Person's name...",identificar:'Identify',cancelar:'Cancel'},
+  pt:{title:'Escuta',today:'Hoje',yesterday:'Ontem',empty_title:'Sem transcrições ainda',empty_body:'Toque no microfone acima e comece a falar.',habla:'Fala:',otro:'Outro fala',modal_title:'Quem falou?',modal_sub:'Identifique esta voz para registrá-la',modal_or:'— ou escreva um novo nome —',modal_ph:'Nome da pessoa...',identificar:'Identificar',cancelar:'Cancelar'},
+  fr:{title:'Écoute',today:"Aujourd'hui",yesterday:'Hier',empty_title:'Pas encore de transcriptions',empty_body:'Appuyez sur le microphone en haut et commencez à parler.',habla:'Parle :',otro:"Quelqu'un d'autre",modal_title:'Qui a parlé ?',modal_sub:"Identifiez cette voix pour l'enregistrer",modal_or:'— ou tapez un nouveau nom —',modal_ph:'Nom de la personne...',identificar:'Identifier',cancelar:'Annuler'},
+  de:{title:'Zuhören',today:'Heute',yesterday:'Gestern',empty_title:'Noch keine Transkriptionen',empty_body:'Tippen Sie auf das Mikrofon oben und beginnen Sie zu sprechen.',habla:'Spricht:',otro:'Jemand anderes',modal_title:'Wer hat gesprochen?',modal_sub:'Identifizieren Sie diese Stimme',modal_or:'— oder geben Sie einen neuen Namen ein —',modal_ph:'Name der Person...',identificar:'Identifizieren',cancelar:'Abbrechen'},
+  it:{title:'Ascolto',today:'Oggi',yesterday:'Ieri',empty_title:'Nessuna trascrizione ancora',empty_body:'Tocca il microfono in alto e inizia a parlare.',habla:'Parla:',otro:'Qualcun altro',modal_title:'Chi ha parlato?',modal_sub:'Identifica questa voce per registrarla',modal_or:'— o scrivi un nuovo nome —',modal_ph:'Nome della persona...',identificar:'Identifica',cancelar:'Annulla'},
+  ru:{title:'Слушать',today:'Сегодня',yesterday:'Вчера',empty_title:'Транскрипций пока нет',empty_body:'Нажмите на микрофон вверху и говорите.',habla:'Говорит:',otro:'Кто-то другой',modal_title:'Кто говорил?',modal_sub:'Определите этот голос для записи',modal_or:'— или введите новое имя —',modal_ph:'Имя человека...',identificar:'Определить',cancelar:'Отмена'},
 };
 
 function getLang(){var t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
@@ -140,8 +131,6 @@ function applyLang(){
   document.getElementById('modal-nombre-input').placeholder=t.modal_ph;
   document.getElementById('modal-btn-id').textContent=t.identificar;
   document.getElementById('modal-btn-cancel').textContent=t.cancelar;
-  if(!micActive)document.getElementById('mic-toggle-label').textContent=t.start;
-  else document.getElementById('mic-toggle-label').textContent=t.listening;
 }
 
 function formatDayLabel(dayKey){
@@ -160,7 +149,6 @@ function init(){
     Object.keys(grouped).sort().reverse().forEach(function(k){document.getElementById('transcript-lines').appendChild(buildDayBlock(k,grouped[k]));});
     document.getElementById('transcript-area').scrollTop=0;
   }
-  syncMicState();
 }
 
 function groupByDay(entries){var g={};entries.forEach(function(e){var k=new Date(e.ts).toISOString().slice(0,10);if(!g[k])g[k]=[];g[k].push(e);});return g;}
@@ -208,24 +196,6 @@ function setSpeaker(type){
   window.parent&&window.parent.postMessage&&window.parent.postMessage({type:'VISTOP_SET_SPEAKER',data:{speaker:type}},'*');
 }
 
-function toggleMic(){
-  var t=ESC_T[getLang()];
-  if(micActive){micActive=false;setMicUI(false,t.start);window.parent&&window.parent.postMessage({type:'VISTOP_PAUSE_MIC'},'*');}
-  else{micActive=true;setMicUI(true,t.listening);sessionStart=Date.now();window.parent&&window.parent.postMessage({type:'VISTOP_START_MIC'},'*');}
-}
-
-function setMicUI(active,label){
-  var mt=document.getElementById('mic-toggle'),lbl=document.getElementById('mic-toggle-label');
-  if(active){mt.classList.add('active');lbl.textContent=label;}
-  else{mt.classList.remove('active');lbl.textContent=label;document.getElementById('interim-text').textContent='';}
-}
-
-function syncMicState(){
-  var t=ESC_T[getLang()],s=window.parent&&window.parent.AppState?window.parent.AppState.micStatus:'idle';
-  if(s==='active'){micActive=true;setMicUI(true,t.listening);}
-  else{micActive=false;setMicUI(false,t.start);}
-}
-
 function abrirModalIdentificar(){
   document.getElementById('modal-nombre-input').value='';
   var lista=document.getElementById('interlocutores-list');lista.innerHTML='';
@@ -265,11 +235,6 @@ window.addEventListener('message',function(event){
     } else {
       document.getElementById('interim-text').textContent=msg.text;
     }
-  }
-  if(type==='VISTOP_MIC_STATUS'){
-    var t=ESC_T[getLang()];
-    if(msg.status==='active'){micActive=true;setMicUI(true,t.listening);}
-    else if(msg.status==='paused'||msg.status==='idle'){micActive=false;setMicUI(false,t.start);document.getElementById('interim-text').textContent='';}
   }
   if(type==='VISTOP_SPEAKER_IDENTIFIED'){
     document.getElementById('otro-chip-label').textContent=msg.speaker;
