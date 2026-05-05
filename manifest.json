@@ -2,7 +2,7 @@
   "name": "VISTOP",
   "short_name": "VISTOP",
   "description": "Aplicación de desarrollo personal con asistencia de inteligencia artificial.",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
