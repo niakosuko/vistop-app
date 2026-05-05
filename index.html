@@ -5,6 +5,54 @@
 <meta name="theme-color" content="#020617">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
+ <script>
+(function () {
+  /*
+    Entrada inicial de VISTOP.
+    Si index.html se abre como pantalla principal, decide a dónde ir.
+    Si se abre dentro de app.html como calibración, NO toca nada.
+  */
+
+  const estaDentroDeOtraPantalla = window.self !== window.top;
+  if (estaDentroDeOtraPantalla) return;
+
+  function existeDato(claves) {
+    for (const clave of claves) {
+      const valor = localStorage.getItem(clave);
+      if (valor && valor !== "null" && valor !== "undefined" && valor !== "{}") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  const tieneUsuario = existeDato([
+    "vistop_titular",
+    "titular",
+    "vistop_usuario",
+    "vistop_user",
+    "vistop_email",
+    "email",
+    "usuario"
+  ]);
+
+  const tienePin = existeDato([
+    "vistop_pin",
+    "pin",
+    "PIN",
+    "userPin",
+    "vistopUserPin",
+    "vistop_user_pin",
+    "vistop_pin_hash"
+  ]);
+
+  if (tieneUsuario || tienePin) {
+    window.location.replace("./app.html");
+  } else {
+    window.location.replace("./titular.html");
+  }
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>VISTOP – Calibración</title>
