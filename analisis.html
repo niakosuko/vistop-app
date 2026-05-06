@@ -26,7 +26,6 @@
   .modo-btn{flex:1;padding:12px 0;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);font-family:var(--font-display);font-size:14px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;}
   .modo-btn.sel-turak{background:rgba(0,212,255,0.15);color:var(--turak);border-color:rgba(0,212,255,0.4);}
   .modo-btn.sel-cirak{background:rgba(200,159,255,0.15);color:var(--cirak);border-color:rgba(200,159,255,0.4);}
-  .modo-btn.sel-juntos{background:rgba(255,183,71,0.12);color:#FFB347;border-color:rgba(255,183,71,0.35);}
   .longitud-row{display:flex;gap:6px;margin-bottom:20px;}
   .long-btn{flex:1;padding:10px 0;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);font-family:var(--font-display);font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;}
   .long-btn.active{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3);color:#fff;}
@@ -34,16 +33,13 @@
   .desc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
   .desc-icon.turak{background:rgba(0,212,255,0.12);}
   .desc-icon.cirak{background:rgba(200,159,255,0.12);}
-  .desc-icon.juntos{background:rgba(255,183,71,0.12);}
   .desc-name{font-family:var(--font-display);font-size:14px;font-weight:700;}
   .desc-name.turak{color:var(--turak);}
   .desc-name.cirak{color:var(--cirak);}
-  .desc-name.juntos{color:#FFB347;}
   .desc-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
   .analyze-btn{width:100%;padding:17px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;}
   .analyze-btn.turak{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;box-shadow:0 4px 24px rgba(0,212,255,0.25);}
   .analyze-btn.cirak{background:linear-gradient(135deg,#C89FFF,#7B2FFF);color:#fff;box-shadow:0 4px 24px rgba(123,47,255,0.25);}
-  .analyze-btn.juntos{background:linear-gradient(135deg,#FFB347,#FF6B35);color:#fff;box-shadow:0 4px 24px rgba(255,183,71,0.25);}
   .analyze-btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
   .loading-wrap{display:none;flex-direction:column;align-items:center;gap:14px;padding:28px 0;}
   .loading-wrap.visible{display:flex;}
@@ -65,7 +61,6 @@
   .escuchar-grande{width:100%;padding:14px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;margin-top:4px;}
   .escuchar-grande.turak{background:rgba(0,212,255,0.12);color:var(--turak);border:1px solid rgba(0,212,255,0.25);}
   .escuchar-grande.cirak{background:rgba(200,159,255,0.12);color:var(--cirak);border:1px solid rgba(200,159,255,0.25);}
-  .escuchar-grande.juntos{background:rgba(255,183,71,0.12);color:#FFB347;border:1px solid rgba(255,183,71,0.25);}
   .escuchar-grande.hablando{opacity:0.7;}
   .escuchar-grande:active{transform:scale(0.97);}
   .mas-btn{width:100%;padding:14px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-bottom:16px;display:none;}
@@ -81,9 +76,6 @@
   .no-memory{display:none;flex-direction:column;align-items:center;gap:12px;padding:28px 20px;text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-card);margin-bottom:20px;}
   .no-memory.visible{display:flex;}
   .no-memory-text{font-size:14px;color:var(--text-secondary);line-height:1.6;max-width:260px;}
-  .juntos-divider{display:flex;align-items:center;gap:12px;margin:4px 0 12px;}
-  .juntos-line{flex:1;height:1px;background:rgba(255,255,255,0.1);}
-  .juntos-label{font-family:var(--font-display);font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.08em;}
   .agotado{text-align:center;padding:16px;font-size:13px;color:rgba(255,255,255,0.35);font-style:italic;display:none;}
   .agotado.visible{display:block;}
   .hablando-chip{display:none;align-items:center;gap:8px;padding:8px 16px;background:rgba(255,183,71,0.1);border:1px solid rgba(255,183,71,0.3);border-radius:var(--radius-pill);font-family:var(--font-display);font-size:12px;font-weight:700;color:#FFB347;margin-bottom:12px;}
@@ -101,7 +93,6 @@
   <div class="modo-row">
     <button type="button" class="modo-btn sel-turak" id="btn-turak" onclick="setModo('turak')">TURAK</button>
     <button type="button" class="modo-btn" id="btn-cirak" onclick="setModo('cirak')">CIRAK</button>
-    <button type="button" class="modo-btn" id="btn-juntos" onclick="setModo('juntos')">JUNTOS</button>
   </div>
   <div class="longitud-row">
     <button type="button" class="long-btn" id="long-corta" onclick="setLongitud('corta')">CORTA</button>
@@ -140,12 +131,6 @@
     </button>
   </div>
 
-  <div class="juntos-divider" id="juntos-divider" style="display:none;">
-    <div class="juntos-line"></div>
-    <div class="juntos-label">CIRAK</div>
-    <div class="juntos-line"></div>
-  </div>
-
   <div class="result-card cirak" id="result-cirak">
     <div class="result-header">
       <div class="result-icon">🌙</div>
@@ -157,11 +142,6 @@
       <span id="escuchar-label-cirak">Escuchar a Cirak</span>
     </button>
   </div>
-
-  <button type="button" class="escuchar-grande juntos" id="escuchar-juntos" style="display:none;" onclick="toggleSpeechJuntos()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-    <span id="escuchar-label-juntos">Escuchar los dos</span>
-  </button>
 
   <div class="hablando-chip" id="hablando-chip">
     <div class="hablando-dot"></div>
@@ -197,12 +177,11 @@ var VISTOP=(function(){
 })();
 
 var modoActual='turak',longitud='media',devolucionesHoy=0,MAX_DEVOLUCIONES=5;
-var vocesDisponibles=[],hablandoTurak=false,hablandoCirak=false,hablandoJuntos=false,uttActual=null;
+var vocesDisponibles=[],hablandoTurak=false,hablandoCirak=false,uttActual=null;
 
 var MODOS={
   turak:{icon:'⚡',color:'turak',nombre:'Turak',sub:'Psicológico · Coaching · Astrológico · Espiritual'},
-  cirak:{icon:'🌙',color:'cirak',nombre:'Cirak',sub:'Espiritual · Relacional · Astrológico · Emocional'},
-  juntos:{icon:'✨',color:'juntos',nombre:'Turak & Cirak',sub:'Análisis integral conjunto'}
+  cirak:{icon:'🌙',color:'cirak',nombre:'Cirak',sub:'Espiritual · Relacional · Astrológico · Emocional'}
 };
 
 var SIGNOS=[
@@ -239,7 +218,7 @@ function init(){
 
 function setModo(modo){
   modoActual=modo;
-  ['turak','cirak','juntos'].forEach(function(m){
+  ['turak','cirak'].forEach(function(m){
     document.getElementById('btn-'+m).className='modo-btn'+(m===modo?' sel-'+m:'');
   });
   var cfg=MODOS[modo];
@@ -249,8 +228,7 @@ function setModo(modo){
   document.getElementById('desc-name').className='desc-name '+cfg.color;
   document.getElementById('desc-sub').textContent=cfg.sub;
   document.getElementById('analyze-btn').className='analyze-btn '+cfg.color;
-  document.getElementById('analyze-label').textContent=
-    modo==='turak'?'Analizar con Turak':modo==='cirak'?'Analizar con Cirak':'Análisis conjunto';
+  document.getElementById('analyze-label').textContent=modo==='turak'?'Analizar con Turak':'Analizar con Cirak';
   ocultarResultados();
 }
 
@@ -321,7 +299,7 @@ function generarAnalisis(titular,memoria,interlocutores){
   var esLarga=longitud==='larga',esCorta=longitud==='corta';
   var turakTexto='',cirakTexto='';
 
-  if(modoActual==='turak'||modoActual==='juntos'){
+  if(modoActual==='turak'){
     var t=nombre?nombre+', ':'';
     if(devolucionesHoy===0)t+='esto es lo que veo cuando miro todo lo que registraste.\n\n';
     else if(devolucionesHoy===1)t+='voy a ir más profundo esta vez.\n\n';
@@ -338,11 +316,11 @@ function generarAnalisis(titular,memoria,interlocutores){
     turakTexto=t;
   }
 
-  if(modoActual==='cirak'||modoActual==='juntos'){
+  if(modoActual==='cirak'){
     var c=nombre?nombre+'... ':'';
     if(devolucionesHoy===0)c+='me senté a escucharte. Todo lo que registraste, cada palabra, cada conversación.\n\n';
     else if(devolucionesHoy===1)c+='quiero hablarte de algo que sentí y no dije antes.\n\n';
-    else c+='hay una capa más profunda que quiero que veamos juntos.\n\n';
+    else c+='hay una capa más profunda que quiero que observes con calma.\n\n';
     if(tieneEmocion)c+='Hay algo que estás sintiendo y que merece espacio antes de ser resuelto. No todo lo que duele necesita una solución inmediata. A veces necesita ser simplemente reconocido.\n\n';
     if(speakers.length>0&&!esCorta)c+='Las personas que aparecen en tu vida — '+speakers.slice(0,3).join(', ')+' — forman parte de tu historia. Cada vínculo que cultivás o descuidás habla de cómo te relacionás con vos mismo también.\n\n';
     if(signo)c+='Tu signo, '+signo.nombre+', te da una forma particular de sentir el mundo. Hoy el universo te invita a '+(signo.nombre==='Cáncer'||signo.nombre==='Piscis'||signo.nombre==='Escorpio'?'confiar en tu intuición y soltar lo que ya no sirve':'conectar con lo que realmente importa y no solo lo urgente')+'.\n\n';
@@ -358,17 +336,11 @@ function generarAnalisis(titular,memoria,interlocutores){
 }
 
 function mostrarResultados(resultado){
-  var mostrarTurak=modoActual==='turak'||modoActual==='juntos';
-  var mostrarCirak=modoActual==='cirak'||modoActual==='juntos';
+  var mostrarTurak=modoActual==='turak';
+  var mostrarCirak=modoActual==='cirak';
   if(mostrarTurak&&resultado.turak){
     document.getElementById('text-turak').textContent=resultado.turak;
     document.getElementById('result-turak').classList.add('visible');
-  }
-  if(modoActual==='juntos'&&resultado.turak&&resultado.cirak){
-    document.getElementById('juntos-divider').style.display='flex';
-    document.getElementById('escuchar-turak').style.display='none';
-    document.getElementById('escuchar-cirak').style.display='none';
-    document.getElementById('escuchar-juntos').style.display='flex';
   }
   if(mostrarCirak&&resultado.cirak){
     document.getElementById('text-cirak').textContent=resultado.cirak;
@@ -379,8 +351,6 @@ function mostrarResultados(resultado){
 function ocultarResultados(){
   document.getElementById('result-turak').classList.remove('visible');
   document.getElementById('result-cirak').classList.remove('visible');
-  document.getElementById('juntos-divider').style.display='none';
-  document.getElementById('escuchar-juntos').style.display='none';
   document.getElementById('escuchar-turak').style.display='flex';
   document.getElementById('escuchar-cirak').style.display='flex';
   document.getElementById('hablando-chip').classList.remove('visible');
@@ -444,82 +414,10 @@ function hablarUno(quien,texto){
   window.speechSynthesis.speak(utt);
 }
 
-function toggleSpeechJuntos(){
-  if(hablandoJuntos){detenerTodo();return;}
-  var textoT=document.getElementById('text-turak').textContent;
-  var textoC=document.getElementById('text-cirak').textContent;
-  if(!textoT&&!textoC)return;
-  hablarJuntos(textoT,textoC);
-}
-
-function hablarJuntos(textoT,textoC){
-  detenerTodo();
-  hablandoJuntos=true;
-  document.getElementById('escuchar-label-juntos').textContent='Detener';
-  document.getElementById('escuchar-juntos').classList.add('hablando');
-  document.getElementById('hablando-chip').classList.add('visible');
-  document.getElementById('hablando-chip-label').textContent='⚡ Turak está hablando...';
-  notificarParent(true);
-
-  var titular=VISTOP.get('titular',{})||{};
-  var lang=titular.idioma||'es-AR';
-
-  var uttT=new SpeechSynthesisUtterance(textoT);
-  uttT.lang=lang;
-  uttT.rate=0.88;
-  uttT.pitch=0.7;
-  uttT.volume=1;
-
-  uttT.onend=function(){
-    if(!hablandoJuntos)return;
-    setTimeout(function(){
-      if(!hablandoJuntos)return;
-      document.getElementById('hablando-chip-label').textContent='🌙 Cirak está hablando...';
-      var uttC=new SpeechSynthesisUtterance(textoC);
-      uttC.lang=lang;
-      uttC.rate=0.9;
-      uttC.pitch=1.4;
-      uttC.volume=1;
-      uttC.onend=function(){
-        hablandoJuntos=false;
-        document.getElementById('escuchar-label-juntos').textContent='Escuchar los dos';
-        document.getElementById('escuchar-juntos').classList.remove('hablando');
-        document.getElementById('hablando-chip').classList.remove('visible');
-        uttActual=null;notificarParent(false);
-      };
-      uttC.onerror=uttC.onend;
-      uttActual=uttC;
-      window.speechSynthesis.speak(uttC);
-    },1000);
-  };
-
-  uttT.onerror=function(){
-    if(!hablandoJuntos)return;
-    document.getElementById('hablando-chip-label').textContent='🌙 Cirak está hablando...';
-    var uttC=new SpeechSynthesisUtterance(textoC);
-    uttC.lang=lang;uttC.rate=0.9;uttC.pitch=1.4;uttC.volume=1;
-    uttC.onend=function(){
-      hablandoJuntos=false;
-      document.getElementById('escuchar-label-juntos').textContent='Escuchar los dos';
-      document.getElementById('escuchar-juntos').classList.remove('hablando');
-      document.getElementById('hablando-chip').classList.remove('visible');
-      uttActual=null;notificarParent(false);
-    };
-    uttC.onerror=uttC.onend;
-    uttActual=uttC;
-    window.speechSynthesis.speak(uttC);
-  };
-
-  uttActual=uttT;
-  window.speechSynthesis.speak(uttT);
-}
-
 function detenerTodo(){
   window.speechSynthesis.cancel();
-  hablandoTurak=false;hablandoCirak=false;hablandoJuntos=false;uttActual=null;
+  hablandoTurak=false;hablandoCirak=false;uttActual=null;
   setSpeakUI('turak',false);setSpeakUI('cirak',false);
-  document.getElementById('escuchar-label-juntos').textContent='Escuchar los dos';
-  document.getElementById('escuchar-juntos').classList.remove('hablando');
   document.getElementById('hablando-chip').classList.remove('visible');
 }
 
