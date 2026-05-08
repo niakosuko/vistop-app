@@ -250,9 +250,58 @@ var NAV_T={
 function getLang(){var t=VISTOP.get('titular',{});var i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
 function applyNav(){var t=NAV_T[getLang()];document.getElementById('nav-titular').textContent=t.titular;document.getElementById('nav-calibrar').textContent=t.calibrar;document.getElementById('nav-escucha').textContent=t.escucha;document.getElementById('nav-inter').textContent=t.inter;document.getElementById('nav-memoria').textContent=t.memoria;document.getElementById('nav-analisis').textContent=t.analisis;var lbl=document.getElementById('mic-label');if(lbl.textContent!==t.escuchando&&lbl.textContent!==t.pausado)lbl.textContent=t.inactivo;}
 
-var AppState={micStatus:'idle',listenWasActive:false,recognition:null,currentModule:'titular.html',isSpeaking:false,currentSpeaker:'titular'};
+var AppState={
+  micStatus:'idle',
+  listenWasActive:false,
+  recognition:null,
+  currentModule:'titular.html',
+  isSpeaking:false,
+  currentSpeaker:'unknown',
+  voiceIdentityReady:false,
+  lastVoiceMatchTitular:false
+};
 window.AppState=AppState;
 function getTitularName(){var t=VISTOP.get('titular',{});return(t&&t.nombre)?t.nombre.split(' ')[0]:'Titular';}
+
+function puedeIdentificarTitularPorVoz(){
+  var estado=VISTOP.get('calibracion_estado','');
+  var modelo=VISTOP.get('titular_voice_model',null) || VISTOP.get('calibracion_ia_modelo',null);
+
+  /*
+    La calibración nueva guarda audio real como "audio_grabado".
+    Eso todavía NO alcanza para identificar automáticamente al titular.
+    Solo cuando conectemos una IA/servicio de comparación de voz,
+    el estado pasará a "ia_lista" y habrá un modelo disponible.
+  */
+  return estado==='ia_lista' && !!modelo;
+}
+
+function resolverSpeakerTranscripcion(){
+  /*
+    Regla de seguridad:
+    VISTOP no debe adjudicar una voz al titular por defecto.
+    Si no hay IA lista o no hay coincidencia confirmada, queda como "?".
+  */
+
+  if(AppState.currentSpeaker && AppState.currentSpeaker!=='titular' && AppState.currentSpeaker!=='unknown'){
+    return AppState.currentSpeaker;
+  }
+
+  if(AppState.currentSpeaker==='unknown'){
+    return '?';
+  }
+
+  if(!puedeIdentificarTitularPorVoz()){
+    return '?';
+  }
+
+  if(AppState.lastVoiceMatchTitular===true){
+    return getTitularName();
+  }
+
+  return '?';
+}
+
 function updateStepIndicators(){var titular=VISTOP.get('titular',{})||{},calibrado=VISTOP.get('calibrado',false);var ok=!!(titular.nombre&&titular.nombre.trim().length>0);var dotT=document.getElementById('dot-titular'),dotC=document.getElementById('dot-calibrar');var btnT=document.querySelector('[data-module="titular.html"]'),btnC=document.querySelector('[data-module="index.html"]');dotT.style.display=ok?'none':'block';ok?btnT.classList.remove('pending'):btnT.classList.add('pending');dotC.style.display=calibrado?'none':'block';calibrado?btnC.classList.remove('pending'):btnC.classList.add('pending');}
 
 /* ══ MOTOR DE VOZ — ANTI DUPLICADO DEFINITIVO ══ */
@@ -312,10 +361,7 @@ function initRecognition(){
 
   r.onresult=function(event){
     if(AppState.isSpeaking)return;
-    var speaker;
-    if(!AppState.currentSpeaker||AppState.currentSpeaker==='titular')speaker=getTitularName();
-    else if(AppState.currentSpeaker==='unknown')speaker='?';
-    else speaker=AppState.currentSpeaker;
+    var speaker=resolverSpeakerTranscripcion();
 
     for(var i=event.resultIndex;i<event.results.length;i++){
       var tx=event.results[i][0].transcript.trim();
@@ -344,7 +390,7 @@ function initRecognition(){
   r.onend=function(){
     /* Guardar al terminar la sesión — con verificación anti-duplicado */
     if(textoMasLargo && textoMasLargo.length > 1){
-      guardarEnMemoria(textoMasLargo, speakerMasLargo || getTitularName());
+      guardarEnMemoria(textoMasLargo, speakerMasLargo || '?');
     }
     textoMasLargo='';
     speakerMasLargo='';
@@ -375,7 +421,20 @@ window.addEventListener('message',function(event){
   else if(type==='VISTOP_RESUME_MIC')resumeListeningAfterSpeech();
   else if(type==='VISTOP_SPEAKING_START'){AppState.isSpeaking=true;pauseListening(true);}
   else if(type==='VISTOP_SPEAKING_END'){AppState.isSpeaking=false;resumeListeningAfterSpeech();}
-  else if(type==='VISTOP_SET_SPEAKER')AppState.currentSpeaker=(data&&data.speaker)?data.speaker:'titular';
+  else if(type==='VISTOP_SET_SPEAKER'){
+    var sp=(data&&data.speaker)?data.speaker:'unknown';
+
+    /*
+      Si el usuario toca "Titular" pero todavía no hay IA lista,
+      NO adjudicamos automáticamente la voz al titular.
+      Queda como desconocida para evitar errores.
+    */
+    if(sp==='titular' && !puedeIdentificarTitularPorVoz()){
+      AppState.currentSpeaker='unknown';
+    }else{
+      AppState.currentSpeaker=sp;
+    }
+  }
   else if(type==='VISTOP_IDENTIFY_SPEAKER')identificarHablante(data);
   else if(type==='VISTOP_LANG_CHANGE'){applyNav();updateStepIndicators();sendLangToFrame();var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';}
   else if(type==='VISTOP_TITULAR_SAVED'){updateStepIndicators();var b=document.querySelector('[data-module="index.html"]');if(b)loadModule(b);}
@@ -383,7 +442,30 @@ window.addEventListener('message',function(event){
   else if(type==='VISTOP_NAV'){if(data&&data.module){var b=document.querySelector('[data-module="'+data.module+'"]');if(b)loadModule(b);}}
 });
 
-function loadModule(btn){if(!btn)return;var module=btn.dataset.module;if(!module)return;document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});btn.classList.add('active');AppState.currentModule=module;var frame=document.getElementById('module-frame');frame.onload=function(){sendLangToFrame();};frame.src=module;if(module!=='escucha.html')AppState.currentSpeaker='titular';}
+function loadModule(btn){
+  if(!btn)return;
+  var module=btn.dataset.module;
+  if(!module)return;
+
+  document.querySelectorAll('.nav-item').forEach(function(el){
+    el.classList.remove('active');
+  });
+
+  btn.classList.add('active');
+  AppState.currentModule=module;
+
+  var frame=document.getElementById('module-frame');
+  frame.onload=function(){sendLangToFrame();};
+  frame.src=module;
+
+  /*
+    Nunca volvemos automáticamente a titular.
+    Hasta que la IA esté lista, el modo seguro es desconocido.
+  */
+  if(module!=='escucha.html'){
+    AppState.currentSpeaker='unknown';
+  }
+}
 function syncNav(module){document.querySelectorAll('.nav-item').forEach(function(btn){btn.classList.toggle('active',btn.dataset.module===module);});}
 window.pauseListening=pauseListening;window.resumeListeningAfterSpeech=resumeListeningAfterSpeech;window.startListening=startListening;window.toggleMic=toggleMic;window.initRecognition=initRecognition;
 
