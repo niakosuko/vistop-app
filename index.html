@@ -47,6 +47,8 @@
 <title>VISTOP – Calibración</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <style>
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
@@ -62,6 +64,7 @@
     --font-body:'DM Sans',sans-serif;
     --error:#FF4560;
     --warning:#FFB347;
+    --ok:#00E08A;
   }
   html,body{width:100%;height:100%;background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:16px;overflow-y:auto;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
   .screen{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 60px;}
@@ -88,8 +91,11 @@
   .status-card{width:100%;max-width:340px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:14px 16px;margin-bottom:18px;display:none;}
   .status-card.visible{display:block;}
   .status-title{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:5px;}
+  .status-title.ok{color:var(--ok);}
+  .status-title.warning{color:var(--warning);}
   .status-body{font-size:13px;color:var(--text-secondary);line-height:1.55;}
   .status-body.warning{color:var(--warning);}
+  .status-body.error{color:var(--error);}
   .progress-wrap{width:100%;max-width:320px;margin-bottom:14px;opacity:0;transition:opacity 0.4s;}
   .progress-wrap.visible{opacity:1;}
   .progress-label{display:flex;justify-content:space-between;margin-bottom:8px;}
@@ -146,7 +152,7 @@
 
   <div class="status-card visible" id="status-card">
     <div class="status-title" id="status-title">Calibración real de voz</div>
-    <div class="status-body" id="status-body">Esta versión guarda una muestra de audio del titular. Todavía no identifica voces con IA, pero deja preparada la base para comparar la voz del titular más adelante.</div>
+    <div class="status-body" id="status-body">Esta versión guarda una muestra real de audio del titular y la sube a Firestore. Todavía no identifica voces con IA, pero deja preparada la base para comparar la voz del titular más adelante.</div>
   </div>
 
   <div class="suggestions" id="suggestions">
@@ -188,11 +194,86 @@
 </div>
 
 <script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyApX5BElQgO_BooWHVc5-FVV14D4p3P-Ww",
+  authDomain: "vistop.firebaseapp.com",
+  projectId: "vistop",
+  storageBucket: "vistop.firebasestorage.app",
+  messagingSenderId: "678603152458",
+  appId: "1:678603152458:web:ecfe395f26ed7fa53b5ab3",
+  measurementId: "G-8EETSDBRB6"
+};
+
+let db = null;
+
+function initFirebase(){
+  try{
+    if(!window.firebase) return false;
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    return true;
+  }catch(e){
+    console.warn('Firebase no inició:', e);
+    db = null;
+    return false;
+  }
+}
+
 const VISTOP = window.parent?.VISTOP || {
   save(k,v){try{localStorage.setItem('vistop_'+k,JSON.stringify(v));}catch(e){}},
   get(k,fb){try{const r=localStorage.getItem('vistop_'+k);return r!==null?JSON.parse(r):(fb!==undefined?fb:null);}catch(e){return fb!==undefined?fb:null;}},
   remove(k){try{localStorage.removeItem('vistop_'+k);}catch(e){}}
 };
+
+function getDeviceUserId(){
+  let id = VISTOP.get('device_user_id','');
+  if(!id){
+    id = 'vistop_user_' + Date.now() + '_' + Math.random().toString(36).slice(2,10);
+    VISTOP.save('device_user_id', id);
+  }
+  return id;
+}
+
+async function subirCalibracionAFirestore(meta, audioBase64){
+  if(!db) initFirebase();
+  if(!db) throw new Error('Firebase no está disponible');
+
+  const userId = getDeviceUserId();
+  const calibrationId = 'cal_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  const titular = VISTOP.get('titular',{}) || {};
+
+  const payload = {
+    calibrationId: calibrationId,
+    userId: userId,
+    titularNombre: titular.nombre || meta.titular_nombre || '',
+    titularEmail: titular.email || '',
+    estado: 'audio_grabado',
+    origen: 'vistop_pwa',
+    mime: meta.mime || 'audio/webm',
+    duracionSegundos: meta.duracion_segundos || 0,
+    sizeBytes: meta.size_bytes || 0,
+    idioma: meta.idioma || 'es-AR',
+    transcript: meta.transcript || '',
+    audioBase64: audioBase64 || '',
+    createdAtClient: Date.now(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    nota: 'Muestra de voz para futura comparación con IA. Firebase guarda la muestra; la identificación de voz se conectará luego con un servicio de IA.'
+  };
+
+  await db.collection('voice_calibrations').doc(calibrationId).set(payload);
+
+  await db.collection('vistop_users').doc(userId).set({
+    userId: userId,
+    titularNombre: titular.nombre || '',
+    titularEmail: titular.email || '',
+    ultimaCalibracionId: calibrationId,
+    ultimaCalibracionEstado: 'audio_grabado',
+    ultimaCalibracionAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAtClient: Date.now()
+  }, { merge:true });
+
+  return { userId, calibrationId };
+}
 
 const CAL_T = {
   es:{
@@ -204,7 +285,7 @@ const CAL_T = {
     go:'Comenzar a escuchar',
     recal:'Recalibrar',
     done_title:'Muestra de voz guardada ✓',
-    done_body:'La voz del titular quedó grabada como referencia. El próximo paso será conectarla con IA para diferenciar al titular de otras personas.',
+    done_body:'La voz del titular quedó grabada y subida a Firestore como referencia. El próximo paso será conectarla con IA para diferenciar al titular de otras personas.',
     already_title:'Muestra de voz ya guardada',
     already_body:'Ya existe una muestra de audio del titular. Podés recalibrar si querés mejorarla.',
     talking:'Hablá con normalidad',
@@ -212,35 +293,53 @@ const CAL_T = {
     short:'Muy corto. Necesitamos al menos 5 segundos de voz.',
     listening:'Grabando voz...',
     status_title:'Calibración real de voz',
-    status_body:'Esta versión guarda una muestra de audio del titular. Todavía no identifica voces con IA, pero deja preparada la base para comparar la voz del titular más adelante.',
+    status_body:'Esta versión guarda una muestra real de audio del titular y la sube a Firestore. Todavía no identifica voces con IA, pero deja preparada la base para comparar la voz del titular más adelante.',
     status_recording:'Grabando audio real y transcribiendo lo que decís. No cierres la app durante la calibración.',
+    status_uploading:'Guardando muestra en Firestore...',
+    status_uploaded:'Muestra subida a Firestore correctamente.',
+    status_local_only:'La muestra quedó guardada localmente, pero no se pudo subir a Firestore. Revisá reglas de Firestore o conexión.',
     status_error:'No pude acceder al micrófono. Revisá permisos y volvé a intentar.',
     sugg_label:'Podés hablar sobre',
     sugg:['Cómo fue tu día','Tus planes de esta semana','Algo que te preocupa','Una meta que tenés']
   },
   en:{
-    step:'Step 2 of 3',title:'Calibrate your voice',subtitle:'VISTOP will record a real voice sample. Speak naturally for 20 seconds.',btn:'Start calibration',stop:'Stop',go:'Start listening',recal:'Recalibrate',done_title:'Voice sample saved ✓',done_body:'The owner voice was saved as a reference. Next step: connect AI to distinguish the owner from other people.',already_title:'Voice sample already saved',already_body:'A voice sample already exists. You can recalibrate to improve it.',talking:'Speak naturally',learning:'I am recording a real sample of your voice. Speak naturally.',short:'Too short. We need at least 5 seconds of voice.',listening:'Recording voice...',status_title:'Real voice calibration',status_body:'This version saves an audio sample. Voice AI identification will be connected later.',status_recording:'Recording real audio and transcribing. Do not close the app.',status_error:'Microphone access failed. Check permissions and try again.',sugg_label:'You can talk about',sugg:['How your day went','Your plans for this week','Something that worries you','A goal you have']
-  },
-  pt:{step:'Passo 2 de 3',title:'Calibre sua voz',subtitle:'VISTOP vai gravar uma amostra real da sua voz. Fale naturalmente por 20 segundos.',btn:'Iniciar calibração',stop:'Parar',go:'Começar a escutar',recal:'Recalibrar',done_title:'Amostra de voz salva ✓',done_body:'A voz do titular foi salva como referência. O próximo passo será conectar IA.',already_title:'Amostra de voz já salva',already_body:'Já existe uma amostra de voz. Você pode recalibrar.',talking:'Fale normalmente',learning:'Estou gravando uma amostra real da sua voz.',short:'Muito curto. Precisamos de pelo menos 5 segundos.',listening:'Gravando voz...',status_title:'Calibração real de voz',status_body:'Esta versão salva uma amostra de áudio. A identificação por IA será conectada depois.',status_recording:'Gravando áudio real e transcrevendo.',status_error:'Não consegui acessar o microfone.',sugg_label:'Você pode falar sobre',sugg:['Como foi seu dia','Seus planos para esta semana','Algo que te preocupa','Uma meta que você tem']},
-  fr:{step:'Étape 2 sur 3',title:'Calibrez votre voix',subtitle:'VISTOP va enregistrer un véritable échantillon vocal. Parlez naturellement pendant 20 secondes.',btn:'Démarrer la calibration',stop:'Arrêter',go:'Commencer à écouter',recal:'Recalibrer',done_title:'Échantillon vocal enregistré ✓',done_body:"La voix du titulaire a été enregistrée comme référence. Prochaine étape : connecter l'IA.",already_title:'Échantillon vocal déjà enregistré',already_body:'Un échantillon existe déjà. Vous pouvez recalibrer.',talking:'Parlez naturellement',learning:'J’enregistre un véritable échantillon de votre voix.',short:'Trop court. Il faut au moins 5 secondes.',listening:'Enregistrement vocal...',status_title:'Calibration vocale réelle',status_body:"Cette version enregistre un échantillon audio. L'identification par IA sera connectée plus tard.",status_recording:'Enregistrement audio réel et transcription.',status_error:"Impossible d'accéder au microphone.",sugg_label:'Vous pouvez parler de',sugg:["Comment s'est passée votre journée",'Vos plans pour cette semaine','Quelque chose qui vous préoccupe','Un objectif que vous avez']},
-  de:{step:'Schritt 2 von 3',title:'Stimme kalibrieren',subtitle:'VISTOP nimmt eine echte Stimmprobe auf. Sprechen Sie 20 Sekunden natürlich.',btn:'Kalibrierung starten',stop:'Stoppen',go:'Mit Zuhören beginnen',recal:'Neu kalibrieren',done_title:'Stimmprobe gespeichert ✓',done_body:'Die Stimme wurde als Referenz gespeichert. Nächster Schritt: KI verbinden.',already_title:'Stimmprobe bereits gespeichert',already_body:'Eine Stimmprobe ist vorhanden. Sie können neu kalibrieren.',talking:'Sprechen Sie natürlich',learning:'Ich nehme eine echte Stimmprobe auf.',short:'Zu kurz. Mindestens 5 Sekunden nötig.',listening:'Stimme wird aufgenommen...',status_title:'Echte Stimmkalibrierung',status_body:'Diese Version speichert eine Audio-Probe. KI-Erkennung kommt später.',status_recording:'Audioaufnahme und Transkription laufen.',status_error:'Mikrofonzugriff fehlgeschlagen.',sugg_label:'Sie können sprechen über',sugg:['Wie Ihr Tag war','Ihre Pläne für diese Woche','Etwas das Sie beschäftigt','Ein Ziel das Sie haben']},
-  it:{step:'Passo 2 di 3',title:'Calibra la tua voce',subtitle:'VISTOP registrerà un campione reale della tua voce. Parla naturalmente per 20 secondi.',btn:'Inizia calibrazione',stop:'Ferma',go:'Inizia ad ascoltare',recal:'Ricalibrare',done_title:'Campione vocale salvato ✓',done_body:'La voce del titolare è stata salvata come riferimento. Prossimo passo: collegare IA.',already_title:'Campione vocale già salvato',already_body:'Esiste già un campione. Puoi ricalibrare.',talking:'Parla normalmente',learning:'Sto registrando un campione reale della tua voce.',short:'Troppo corto. Servono almeno 5 secondi.',listening:'Registrando voce...',status_title:'Calibrazione vocale reale',status_body:'Questa versione salva un campione audio. Il riconoscimento IA sarà collegato dopo.',status_recording:'Registrazione audio reale e trascrizione.',status_error:'Accesso al microfono non riuscito.',sugg_label:'Puoi parlare di',sugg:['Come è andata la tua giornata','I tuoi piani per questa settimana','Qualcosa che ti preoccupa','Un obiettivo che hai']},
-  ru:{step:'Шаг 2 из 3',title:'Калибровка голоса',subtitle:'VISTOP запишет реальный образец вашего голоса. Говорите естественно 20 секунд.',btn:'Начать калибровку',stop:'Остановить',go:'Начать слушать',recal:'Перекалибровать',done_title:'Образец голоса сохранён ✓',done_body:'Голос сохранён как эталон. Следующий шаг: подключить ИИ.',already_title:'Образец голоса уже сохранён',already_body:'Образец уже есть. Можно перекалибровать.',talking:'Говорите естественно',learning:'Записываю реальный образец вашего голоса.',short:'Слишком коротко. Нужно минимум 5 секунд.',listening:'Запись голоса...',status_title:'Реальная калибровка голоса',status_body:'Эта версия сохраняет аудио-образец. ИИ будет подключён позже.',status_recording:'Идёт запись и транскрипция.',status_error:'Нет доступа к микрофону.',sugg_label:'Вы можете говорить о',sugg:['Как прошёл ваш день','Ваши планы на эту неделю','Что вас беспокоит','Ваша цель']}
+    step:'Step 2 of 3',
+    title:'Calibrate your voice',
+    subtitle:'VISTOP will record a real voice sample. Speak naturally for 20 seconds.',
+    btn:'Start calibration',
+    stop:'Stop',
+    go:'Start listening',
+    recal:'Recalibrate',
+    done_title:'Voice sample saved ✓',
+    done_body:'The owner voice was saved and uploaded to Firestore as a reference. Next step: connect AI to distinguish the owner from other people.',
+    already_title:'Voice sample already saved',
+    already_body:'A voice sample already exists. You can recalibrate to improve it.',
+    talking:'Speak naturally',
+    learning:'I am recording a real sample of your voice. Speak naturally.',
+    short:'Too short. We need at least 5 seconds of voice.',
+    listening:'Recording voice...',
+    status_title:'Real voice calibration',
+    status_body:'This version saves a real audio sample and uploads it to Firestore. AI voice identification will be connected later.',
+    status_recording:'Recording real audio and transcribing. Do not close the app.',
+    status_uploading:'Saving sample to Firestore...',
+    status_uploaded:'Sample uploaded to Firestore successfully.',
+    status_local_only:'The sample was saved locally but could not be uploaded to Firestore.',
+    status_error:'Microphone access failed. Check permissions and try again.',
+    sugg_label:'You can talk about',
+    sugg:['How your day went','Your plans for this week','Something that worries you','A goal you have']
+  }
 };
 
 function getLang(){
   const t=VISTOP.get('titular',{})||{};
   const i=(t&&t.idioma)?t.idioma:'es-AR';
   if(i.startsWith('en'))return 'en';
-  if(i.startsWith('pt'))return 'pt';
-  if(i.startsWith('fr'))return 'fr';
-  if(i.startsWith('de'))return 'de';
-  if(i.startsWith('it'))return 'it';
-  if(i.startsWith('ru'))return 'ru';
   return 'es';
 }
 
-function getT(){return CAL_T[getLang()] || CAL_T.es;}
+function getT(){
+  return CAL_T[getLang()] || CAL_T.es;
+}
 
 const DURACION=20;
 let state='idle';
@@ -277,11 +376,17 @@ function applyLang(){
   const t=getT();
   document.getElementById('step-label').textContent=t.step;
   document.getElementById('sugg-label').textContent=t.sugg_label;
-  t.sugg.forEach((s,i)=>{const el=document.getElementById('sugg-'+(i+1));if(el)el.textContent=s;});
+
+  t.sugg.forEach((s,i)=>{
+    const el=document.getElementById('sugg-'+(i+1));
+    if(el)el.textContent=s;
+  });
+
   document.getElementById('done-title').textContent=t.done_title;
   document.getElementById('done-body').textContent=t.done_body;
   document.getElementById('already-title').textContent=t.already_title;
   document.getElementById('already-body').textContent=t.already_body;
+
   statusTitle.textContent=t.status_title;
   statusBody.textContent=t.status_body;
 
@@ -290,6 +395,7 @@ function applyLang(){
     document.getElementById('cal-subtitle').textContent=t.subtitle;
     btnMain.textContent=t.btn;
   }
+
   if(state==='done'){
     btnMain.textContent=t.recal;
     btnSkip.textContent=t.go;
@@ -297,10 +403,13 @@ function applyLang(){
 }
 
 function init(){
+  initFirebase();
   applyLang();
+
   const estado=VISTOP.get('calibracion_estado','');
   const calibrado=VISTOP.get('calibrado',false);
   const tieneAudio=!!VISTOP.get('calibracion_audio_meta',null);
+  const firestoreInfo=VISTOP.get('calibracion_firestore',null);
 
   if(calibrado || estado==='audio_grabado' || tieneAudio){
     introText.style.display='none';
@@ -310,6 +419,12 @@ function init(){
     btnSkip.style.display='block';
     btnSkip.textContent=getT().go;
     state='done';
+
+    if(firestoreInfo && firestoreInfo.calibrationId){
+      statusTitle.textContent='Firestore conectado';
+      statusTitle.className='status-title ok';
+      statusBody.textContent='Última muestra subida: '+firestoreInfo.calibrationId;
+    }
   }
 }
 
@@ -324,6 +439,7 @@ function handleSkip(){
 
 async function startCalibration(){
   const t=getT();
+
   state='recording';
   elapsed=0;
   transcriptAcumulado='';
@@ -334,24 +450,32 @@ async function startCalibration(){
   doneCard.classList.remove('visible');
   introText.style.display='';
   statusCard.classList.add('visible');
+
   statusTitle.textContent=t.status_title;
+  statusTitle.className='status-title';
   statusBody.textContent=t.status_recording;
   statusBody.className='status-body';
 
   document.getElementById('cal-title').textContent=t.talking;
   document.getElementById('cal-subtitle').textContent=t.learning;
+
   progressWrap.classList.add('visible');
   liveTranscript.classList.add('visible');
   suggestions.classList.add('visible');
+
   transcriptText.textContent='';
   transcriptText.className='';
+
   micCore.classList.remove('done','error');
   micCore.classList.add('recording');
+
   ring1.classList.add('pulsing');
   ring2.classList.add('pulsing');
   ring3.classList.add('pulsing');
+
   btnMain.textContent=t.stop;
   btnSkip.style.display='none';
+
   progressText.textContent=t.listening;
   progressFill.style.width='0%';
   progressTime.textContent='0s';
@@ -363,6 +487,7 @@ async function startCalibration(){
   }
 
   startLocalRecognition();
+
   timer=setInterval(()=>{
     elapsed++;
     progressFill.style.width=Math.min((elapsed/DURACION)*100,100)+'%';
@@ -374,6 +499,7 @@ async function startCalibration(){
 async function startAudioRecording(){
   try{
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) return false;
+
     mediaStream = await navigator.mediaDevices.getUserMedia({
       audio:{
         echoCancellation:true,
@@ -384,15 +510,31 @@ async function startAudioRecording(){
 
     const preferidos=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
     let mime='';
+
     for(const m of preferidos){
-      if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)){mime=m;break;}
+      if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)){
+        mime=m;
+        break;
+      }
     }
+
     recordingMimeType=mime || '';
-    mediaRecorder = recordingMimeType ? new MediaRecorder(mediaStream,{mimeType:recordingMimeType}) : new MediaRecorder(mediaStream);
-    mediaRecorder.ondataavailable=function(e){if(e.data&&e.data.size>0)audioChunks.push(e.data);};
+
+    const opts = recordingMimeType
+      ? { mimeType: recordingMimeType, audioBitsPerSecond: 32000 }
+      : { audioBitsPerSecond: 32000 };
+
+    mediaRecorder = new MediaRecorder(mediaStream, opts);
+
+    mediaRecorder.ondataavailable=function(e){
+      if(e.data&&e.data.size>0)audioChunks.push(e.data);
+    };
+
     mediaRecorder.start(1000);
     return true;
+
   }catch(e){
+    console.warn('No se pudo grabar audio:', e);
     return false;
   }
 }
@@ -404,26 +546,38 @@ function stopAudioRecording(){
       resolve(null);
       return;
     }
+
     const recorder=mediaRecorder;
+
     recorder.onstop=function(){
-      const blob = audioChunks.length ? new Blob(audioChunks,{type:recordingMimeType || recorder.mimeType || 'audio/webm'}) : null;
+      const blob = audioChunks.length
+        ? new Blob(audioChunks,{type:recordingMimeType || recorder.mimeType || 'audio/webm'})
+        : null;
+
       stopMediaStream();
       resolve(blob);
     };
+
     try{
       if(recorder.state !== 'inactive') recorder.stop();
-      else { stopMediaStream(); resolve(null); }
+      else {
+        stopMediaStream();
+        resolve(null);
+      }
     }catch(e){
       stopMediaStream();
       resolve(null);
     }
+
     mediaRecorder=null;
   });
 }
 
 function stopMediaStream(){
   if(mediaStream){
-    mediaStream.getTracks().forEach(track=>{try{track.stop();}catch(e){}});
+    mediaStream.getTracks().forEach(track=>{
+      try{track.stop();}catch(e){}
+    });
     mediaStream=null;
   }
 }
@@ -436,13 +590,18 @@ function blobToBase64(blob){
     reader.readAsDataURL(blob);
   });
 }
-
-async function stopCalibration(completado, permisoError){
+  async function stopCalibration(completado, permisoError){
   const t=getT();
-  if(timer){clearInterval(timer);timer=null;}
+
+  if(timer){
+    clearInterval(timer);
+    timer=null;
+  }
+
   stopLocalRecognition();
 
   const audioBlob = await stopAudioRecording();
+
   state='done';
   micCore.classList.remove('recording');
   ring1.classList.remove('pulsing');
@@ -452,20 +611,35 @@ async function stopCalibration(completado, permisoError){
   if(permisoError){
     state='idle';
     micCore.classList.add('error');
+
     progressText.textContent=t.status_error;
+
     statusTitle.textContent=t.status_title;
+    statusTitle.className='status-title warning';
     statusBody.textContent=t.status_error;
     statusBody.className='status-body warning';
+
     btnMain.textContent=t.btn;
     btnMain.onclick=handleMainBtn;
     return;
   }
 
   if((completado || elapsed>=5) && audioBlob){
+    statusTitle.textContent=t.status_title;
+    statusTitle.className='status-title';
+    statusBody.textContent=t.status_uploading;
+    statusBody.className='status-body';
+
     let audioBase64='';
-    try{ audioBase64 = await blobToBase64(audioBlob); }catch(e){ audioBase64=''; }
+
+    try{
+      audioBase64 = await blobToBase64(audioBlob);
+    }catch(e){
+      audioBase64='';
+    }
 
     const titular=VISTOP.get('titular',{})||{};
+
     const meta={
       estado:'audio_grabado',
       ts:Date.now(),
@@ -483,36 +657,83 @@ async function stopCalibration(completado, permisoError){
     VISTOP.save('calibracion_audio_meta',meta);
 
     if(audioBase64){
-      try{ VISTOP.save('calibracion_audio_base64',audioBase64); }
-      catch(e){
+      try{
+        VISTOP.save('calibracion_audio_base64',audioBase64);
+      }catch(e){
         meta.audio_guardado_local=false;
         meta.error='localStorage_full_or_unavailable';
         VISTOP.save('calibracion_audio_meta',meta);
       }
     }
 
+    let firestoreOk=false;
+    let firestoreInfo=null;
+
+    try{
+      firestoreInfo = await subirCalibracionAFirestore(meta, audioBase64);
+
+      VISTOP.save('calibracion_firestore', {
+        ok:true,
+        userId:firestoreInfo.userId,
+        calibrationId:firestoreInfo.calibrationId,
+        ts:Date.now()
+      });
+
+      firestoreOk=true;
+
+    }catch(e){
+      console.warn('No se pudo subir a Firestore:', e);
+
+      VISTOP.save('calibracion_firestore', {
+        ok:false,
+        error:String(e && e.message ? e.message : e),
+        ts:Date.now()
+      });
+    }
+
     progressWrap.classList.remove('visible');
     liveTranscript.classList.remove('visible');
     suggestions.classList.remove('visible');
+
     introText.style.display='none';
     doneCard.classList.add('visible');
     micCore.classList.add('done');
     statusCard.classList.add('visible');
-    statusTitle.textContent=t.status_title;
-    statusBody.textContent='Muestra guardada. Duración: '+elapsed+' segundos. Tamaño: '+Math.round(audioBlob.size/1024)+' KB. Próximo paso: conectar IA para comparar voces.';
-    statusBody.className='status-body';
+
+    if(firestoreOk){
+      statusTitle.textContent='Firestore conectado';
+      statusTitle.className='status-title ok';
+      statusBody.textContent='Muestra subida correctamente. ID: '+firestoreInfo.calibrationId+'. Duración: '+elapsed+' segundos. Tamaño: '+Math.round(audioBlob.size/1024)+' KB.';
+      statusBody.className='status-body';
+    }else{
+      statusTitle.textContent='Guardado local';
+      statusTitle.className='status-title warning';
+      statusBody.textContent='La muestra quedó guardada en el dispositivo, pero no se pudo subir a Firestore. Revisá que Firestore esté en modo de prueba y que haya conexión.';
+      statusBody.className='status-body warning';
+    }
+
     btnMain.textContent=t.go;
     btnSkip.style.display='none';
-    btnMain.onclick=function(){window.parent?.postMessage({type:'VISTOP_CALIBRADO'},'*');};
-    if(window.parent?.initRecognition) window.parent.initRecognition();
-  } else {
+
+    btnMain.onclick=function(){
+      window.parent?.postMessage({type:'VISTOP_CALIBRADO'},'*');
+    };
+
+    if(window.parent?.initRecognition){
+      window.parent.initRecognition();
+    }
+
+  }else{
     state='idle';
     micCore.classList.remove('done');
+
     progressText.textContent=t.short;
     progressFill.style.width='0%';
     progressTime.textContent='0s';
+
     statusBody.textContent=t.short;
     statusBody.className='status-body warning';
+
     btnMain.textContent=t.btn;
     btnMain.onclick=handleMainBtn;
   }
@@ -520,39 +741,70 @@ async function stopCalibration(completado, permisoError){
 
 function startLocalRecognition(){
   const SpeechAPI=window.SpeechRecognition||window.webkitSpeechRecognition;
+
   if(!SpeechAPI) return;
+
   recognition=new SpeechAPI();
   recognition.continuous=true;
   recognition.interimResults=true;
   recognition.maxAlternatives=1;
   recognition.lang=(VISTOP.get('titular',{})||{}).idioma||'es-AR';
+
   recognition.onresult=(event)=>{
     let interim='';
+
     for(let i=event.resultIndex;i<event.results.length;i++){
       const tx=event.results[i][0].transcript;
-      if(event.results[i].isFinal) transcriptAcumulado+=tx+' ';
-      else interim=tx;
+
+      if(event.results[i].isFinal){
+        transcriptAcumulado+=tx+' ';
+      }else{
+        interim=tx;
+      }
     }
+
     const d=(transcriptAcumulado+interim).trim();
+
     if(d){
       transcriptText.textContent=d;
       transcriptText.className='has-text';
     }
   };
-  recognition.onerror=(e)=>{if(e.error==='not-allowed')stopCalibration(false,true);};
-  recognition.onend=()=>{if(state==='recording')try{recognition.start();}catch(e){}};
-  try{recognition.start();}catch(e){}
+
+  recognition.onerror=(e)=>{
+    if(e.error==='not-allowed'){
+      stopCalibration(false,true);
+    }
+  };
+
+  recognition.onend=()=>{
+    if(state==='recording'){
+      try{
+        recognition.start();
+      }catch(e){}
+    }
+  };
+
+  try{
+    recognition.start();
+  }catch(e){}
 }
 
 function stopLocalRecognition(){
   if(recognition){
-    try{recognition.onend=null;recognition.stop();}catch(e){}
+    try{
+      recognition.onend=null;
+      recognition.stop();
+    }catch(e){}
+
     recognition=null;
   }
 }
 
 window.addEventListener('message',function(event){
-  if(event.data&&event.data.type==='VISTOP_LANG_CHANGE') applyLang();
+  if(event.data&&event.data.type==='VISTOP_LANG_CHANGE'){
+    applyLang();
+  }
 });
 
 init();
