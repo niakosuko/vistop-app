@@ -261,7 +261,22 @@ var AppState={
   lastVoiceMatchTitular:false
 };
 window.AppState=AppState;
-function getTitularName(){var t=VISTOP.get('titular',{});return(t&&t.nombre)?t.nombre.split(' ')[0]:'Titular';}
+function getTitularName(){
+  var t=VISTOP.get('titular',{}) || {};
+  var nombre = (t.titularNombre || t.nombre || t.name || VISTOP.get('titular_nombre','') || '').toString().trim();
+
+  if(!nombre){
+    try{
+      var raw = localStorage.getItem('vistop_titular') || localStorage.getItem('vistop_usuario') || localStorage.getItem('vistop_user');
+      if(raw){
+        var obj = JSON.parse(raw);
+        nombre = (obj.titularNombre || obj.nombre || obj.name || '').toString().trim();
+      }
+    }catch(e){}
+  }
+
+  return nombre ? nombre.split(' ')[0] : 'Titular';
+}
 
 function puedeIdentificarTitularPorVoz(){
   var estado=VISTOP.get('calibracion_estado','');
@@ -278,28 +293,26 @@ function puedeIdentificarTitularPorVoz(){
 
 function resolverSpeakerTranscripcion(){
   /*
-    Regla de seguridad:
-    VISTOP no debe adjudicar una voz al titular por defecto.
-    Si no hay IA lista o no hay coincidencia confirmada, queda como "?".
+    Regla actual, sin IA de voz automática todavía:
+    - Si el usuario eligió el titular, cada frase queda con el nombre del titular logueado.
+    - Si eligió "otro/no identificado", queda como "?" para poder identificarlo después.
+    - Si ya se nombró un interlocutor, queda con ese nombre.
+    Más adelante, cuando conectemos IA de voz, esta misma función podrá decidir automáticamente.
   */
 
-  if(AppState.currentSpeaker && AppState.currentSpeaker!=='titular' && AppState.currentSpeaker!=='unknown'){
-    return AppState.currentSpeaker;
-  }
-
-  if(AppState.currentSpeaker==='unknown'){
-    return '?';
-  }
-
-  if(!puedeIdentificarTitularPorVoz()){
-    return '?';
-  }
-
-  if(AppState.lastVoiceMatchTitular===true){
+  if(AppState.currentSpeaker === 'titular'){
     return getTitularName();
   }
 
-  return '?';
+  if(AppState.lastVoiceMatchTitular === true){
+    return getTitularName();
+  }
+
+  if(!AppState.currentSpeaker || AppState.currentSpeaker === 'unknown'){
+    return '?';
+  }
+
+  return AppState.currentSpeaker;
 }
 
 function updateStepIndicators(){var titular=VISTOP.get('titular',{})||{},calibrado=VISTOP.get('calibrado',false);var ok=!!(titular.nombre&&titular.nombre.trim().length>0);var dotT=document.getElementById('dot-titular'),dotC=document.getElementById('dot-calibrar');var btnT=document.querySelector('[data-module="titular.html"]'),btnC=document.querySelector('[data-module="index.html"]');dotT.style.display=ok?'none':'block';ok?btnT.classList.remove('pending'):btnT.classList.add('pending');dotC.style.display=calibrado?'none':'block';calibrado?btnC.classList.remove('pending'):btnC.classList.add('pending');}
@@ -425,15 +438,13 @@ window.addEventListener('message',function(event){
     var sp=(data&&data.speaker)?data.speaker:'unknown';
 
     /*
-      Si el usuario toca "Titular" pero todavía no hay IA lista,
-      NO adjudicamos automáticamente la voz al titular.
-      Queda como desconocida para evitar errores.
+      Selección manual de hablante:
+      si el usuario toca el titular, se usa el nombre del titular logueado.
+      No es identificación automática de voz; es una marca manual que queda activa
+      hasta que el usuario cambie a "otro" o identifique a otra persona.
     */
-    if(sp==='titular' && !puedeIdentificarTitularPorVoz()){
-      AppState.currentSpeaker='unknown';
-    }else{
-      AppState.currentSpeaker=sp;
-    }
+    AppState.currentSpeaker = sp;
+    AppState.lastVoiceMatchTitular = (sp === 'titular');
   }
   else if(type==='VISTOP_IDENTIFY_SPEAKER')identificarHablante(data);
   else if(type==='VISTOP_LANG_CHANGE'){applyNav();updateStepIndicators();sendLangToFrame();var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';}
