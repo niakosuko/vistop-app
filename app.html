@@ -419,8 +419,41 @@ function initRecognition(){
 }
 
 function startListening(){if(!AppState.recognition)initRecognition();if(AppState.micStatus==='active')return;var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';try{AppState.micStatus='active';AppState.recognition.start();}catch(e){}}
-function pauseListening(byAnalysis){if(byAnalysis)AppState.listenWasActive=true;AppState.micStatus='paused';setMicStatus('paused',NAV_T[getLang()].pausado);try{if(AppState.recognition)AppState.recognition.stop();}catch(e){}}
-function resumeListeningAfterSpeech(){AppState.isSpeaking=false;if(AppState.listenWasActive||AppState.micStatus==='paused'){AppState.listenWasActive=false;setTimeout(function(){startListening();},800);}}
+function pauseListening(byAnalysis){
+  var estabaEscuchando = AppState.micStatus === 'active';
+
+  if(byAnalysis){
+    AppState.listenWasActive = estabaEscuchando;
+  }
+
+  try{
+    if(AppState.recognition) AppState.recognition.stop();
+  }catch(e){}
+
+  if(byAnalysis && !estabaEscuchando){
+    AppState.micStatus = 'idle';
+    setMicStatus('idle', NAV_T[getLang()].inactivo);
+    return;
+  }
+
+  AppState.micStatus = 'paused';
+  setMicStatus('paused', NAV_T[getLang()].pausado);
+}
+
+function resumeListeningAfterSpeech(){
+  AppState.isSpeaking = false;
+
+  if(AppState.listenWasActive){
+    AppState.listenWasActive = false;
+    setTimeout(function(){
+      startListening();
+    },800);
+  }else{
+    AppState.listenWasActive = false;
+    AppState.micStatus = 'idle';
+    setMicStatus('idle', NAV_T[getLang()].inactivo);
+  }
+}
 function toggleMic(){if(AppState.micStatus==='active')pauseListening(false);else startListening();}
 function setMicStatus(status,label){AppState.micStatus=status;var dot=document.getElementById('mic-dot'),lbl=document.getElementById('mic-label'),chip=document.getElementById('mic-status-chip');dot.className='';chip.className='';if(status==='active'){dot.classList.add('active');chip.classList.add('active');}else if(status==='paused')dot.classList.add('paused');else if(status==='error')dot.classList.add('error');lbl.textContent=label;broadcastMicStatus(status);}
 function broadcastMicStatus(status){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;try{frame.contentWindow.postMessage({type:'VISTOP_MIC_STATUS',status:status},'*');}catch(e){}}
