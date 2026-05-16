@@ -167,6 +167,64 @@ function renderPersonFilter(){
     wrap.appendChild(chip);
   }
 
+  // Siempre primero: Todos
+  crearChip(t.todos,null,'');
+
+  // Después: signo de pregunta
+  crearChip('?','?','unknown-chip');
+
+  const titular=getTitularName();
+  const inters=VISTOP.get('interlocutores',[])||[];
+
+  const nombres={};
+
+  // Agregar titular
+  if(titular && titular!=='Titular'){
+    nombres[titular]=true;
+  }
+
+  // Agregar personas guardadas en Interlocutores
+  inters.forEach(function(p){
+    if(p&&p.nombre)nombres[p.nombre]=true;
+  });
+
+  // Agregar personas que ya aparezcan en Memoria
+  todaLaMemoria.forEach(function(e){
+    const sp=e.speaker;
+    if(sp && sp!=='?' && sp!=='Titular'){
+      nombres[sp]=true;
+    }
+  });
+
+  // Orden alfabético real
+  Object.keys(nombres)
+    .sort(function(a,b){
+      return a.localeCompare(b,'es',{sensitivity:'base'});
+    })
+    .forEach(function(nombre){
+      crearChip(nombre,nombre,'');
+    });
+
+  // Siempre al final: botón +
+  const plus=document.createElement('div');
+  plus.className='person-chip plus-chip';
+  plus.textContent='+';
+  plus.onclick=function(){crearNuevaPersona();};
+  wrap.appendChild(plus);
+}
+
+  function crearChip(nombre, valor, claseExtra){
+    const chip=document.createElement('div');
+    chip.className='person-chip '+(claseExtra||'')+(personaActiva===valor?' active':'');
+    chip.textContent=nombre;
+    chip.onclick=function(){
+      personaActiva=valor;
+      renderPersonFilter();
+      actualizarEstadoAsignacion();
+    };
+    wrap.appendChild(chip);
+  }
+
   crearChip(t.todos,null,'');
 
   const titular=getTitularName();
