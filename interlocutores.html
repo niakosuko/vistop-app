@@ -11,10 +11,16 @@
   :root { --bg:#050A14; --bg-input:rgba(255,255,255,0.08); --border:rgba(255,255,255,0.15); --border-focus:rgba(0,212,255,0.6); --cyan:#00D4FF; --blue:#0066FF; --text-primary:#FFFFFF; --text-secondary:rgba(255,255,255,0.75); --text-muted:rgba(255,255,255,0.45); --radius-pill:100px; --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
   html,body{width:100%;height:100%;background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:16px;line-height:1.5;overflow-y:auto;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
   .screen{padding:16px 16px 100px;}
-  .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);gap:10px;}
   .top-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
-  .add-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-pill);background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.35);color:var(--cyan);font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .add-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-pill);background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.35);color:var(--cyan);font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
   .add-btn:active{transform:scale(0.95);}
+  .search-panel{display:flex;gap:8px;align-items:center;margin-bottom:16px;}
+  .search-wrap{flex:1;position:relative;}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.45;pointer-events:none;}
+  .search-input{width:100%;padding:11px 12px 11px 36px;background:var(--bg-input);border:1px solid var(--border);border-radius:14px;color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;}
+  .search-input:focus{border-color:var(--border-focus);}
+  .clear-search{padding:11px 14px;border-radius:14px;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text-secondary);font-family:var(--font-display);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
   .category{margin-bottom:28px;}
   .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
   .cat-badge{display:inline-flex;align-items:center;padding:5px 14px;border-radius:var(--radius-pill);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
@@ -23,18 +29,20 @@
   .cat-badge.ocasional{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:var(--text-secondary);}
   .cat-count{font-size:12px;color:var(--text-muted);margin-left:auto;}
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-  .person-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;position:relative;cursor:pointer;transition:all 0.2s;}
+  .person-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;position:relative;cursor:pointer;transition:all 0.2s;min-height:128px;}
   .person-card:active{background:rgba(255,255,255,0.09);}
   .person-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:16px;font-weight:700;}
   .person-avatar.principal{background:rgba(0,212,255,0.15);color:var(--cyan);border:1.5px solid rgba(0,212,255,0.35);}
   .person-avatar.frecuente{background:rgba(123,47,255,0.15);color:#C89FFF;border:1.5px solid rgba(123,47,255,0.35);}
   .person-avatar.ocasional{background:rgba(255,255,255,0.08);color:var(--text-secondary);border:1.5px solid rgba(255,255,255,0.18);}
-  .person-name{font-family:var(--font-display);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .person-role{font-size:11px;color:var(--text-secondary);margin-top:1px;}
+  .person-name{font-family:var(--font-display);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:50px;}
+  .person-role{font-size:11px;color:var(--text-secondary);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .person-interactions{font-size:10px;color:var(--text-muted);margin-top:2px;}
-  .person-delete{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.05);border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:15px;display:flex;align-items:center;justify-content:center;}
-  .person-delete:active{background:rgba(255,69,96,0.2);color:#FF4560;}
-  .add-card{background:transparent;border:1px dashed rgba(255,255,255,0.2);border-radius:18px;padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;min-height:90px;transition:all 0.2s;color:rgba(255,255,255,0.35);font-size:12px;font-family:var(--font-display);font-weight:600;}
+  .person-actions{position:absolute;top:8px;right:8px;display:flex;gap:5px;}
+  .person-action{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.05);border:none;cursor:pointer;color:rgba(255,255,255,0.48);font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .person-action:active{background:rgba(0,212,255,0.15);color:var(--cyan);}
+  .person-action.delete:active{background:rgba(255,69,96,0.2);color:#FF4560;}
+  .add-card{background:transparent;border:1px dashed rgba(255,255,255,0.2);border-radius:18px;padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;min-height:110px;transition:all 0.2s;color:rgba(255,255,255,0.35);font-size:12px;font-family:var(--font-display);font-weight:600;}
   .add-card:active{background:rgba(255,255,255,0.05);border-color:var(--border-focus);color:var(--cyan);}
   .history-panel{display:none;position:fixed;inset:0;background:var(--bg);z-index:40;flex-direction:column;}
   .history-panel.visible{display:flex;}
@@ -70,7 +78,7 @@
   .modal-btn-cancel{padding:14px 20px;border-radius:var(--radius-pill);background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--text-secondary);font-family:var(--font-display);font-size:14px;font-weight:600;cursor:pointer;}
   .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 24px;text-align:center;}
   .empty-title{font-family:var(--font-display);font-size:16px;font-weight:700;color:rgba(255,255,255,0.6);}
-  .empty-body{font-size:13px;color:rgba(255,255,255,0.35);max-width:240px;line-height:1.6;}
+  .empty-body{font-size:13px;color:rgba(255,255,255,0.35);max-width:260px;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -82,6 +90,15 @@
       <span id="lbl-agregar">Agregar</span>
     </button>
   </div>
+
+  <div class="search-panel">
+    <div class="search-wrap">
+      <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="search-personas" oninput="renderAll()" placeholder="Buscar persona...">
+    </div>
+    <button type="button" class="clear-search" id="btn-clear-search" onclick="limpiarBusqueda()">Limpiar</button>
+  </div>
+
   <div id="content"></div>
 </div>
 
@@ -121,13 +138,13 @@
 const VISTOP=window.parent?.VISTOP||{get:()=>[],save:()=>{}};
 
 const INT_T={
-  es:{title:'Personas',add:'Agregar',new_person:'Nueva persona',lbl_name:'Nombre',lbl_role:'Rol o relación',lbl_type:'Tipo',principal:'Principal',frecuente:'Frecuente',ocasional:'Ocasional',save:'Guardar',cancel:'Cancelar',add_card:'Agregar',empty_title:'Sin personas aún',empty_body:'Agregá personas de tu entorno para que VISTOP tenga contexto de tus relaciones.',interacciones:'interacción',interacciones_pl:'interacciones',sin_interacciones:'Sin interacciones registradas',name_ph:'Nombre completo',role_ph:'ej: Socio, Pareja, Mamá...'},
-  en:{title:'People',add:'Add',new_person:'New person',lbl_name:'Name',lbl_role:'Role or relationship',lbl_type:'Type',principal:'Primary',frecuente:'Frequent',ocasional:'Occasional',save:'Save',cancel:'Cancel',add_card:'Add',empty_title:'No people yet',empty_body:'Add people from your environment so VISTOP has context about your relationships.',interacciones:'interaction',interacciones_pl:'interactions',sin_interacciones:'No interactions recorded',name_ph:'Full name',role_ph:'e.g.: Partner, Mom, Coach...'},
-  pt:{title:'Pessoas',add:'Adicionar',new_person:'Nova pessoa',lbl_name:'Nome',lbl_role:'Função ou relação',lbl_type:'Tipo',principal:'Principal',frecuente:'Frequente',ocasional:'Ocasional',save:'Salvar',cancel:'Cancelar',add_card:'Adicionar',empty_title:'Sem pessoas ainda',empty_body:'Adicione pessoas do seu entorno para que o VISTOP tenha contexto das suas relações.',interacciones:'interação',interacciones_pl:'interações',sin_interacciones:'Nenhuma interação registrada',name_ph:'Nome completo',role_ph:'ex: Sócio, Parceira, Mãe...'},
-  fr:{title:'Personnes',add:'Ajouter',new_person:'Nouvelle personne',lbl_name:'Nom',lbl_role:'Rôle ou relation',lbl_type:'Type',principal:'Principal',frecuente:'Fréquent',ocasional:'Occasionnel',save:'Enregistrer',cancel:'Annuler',add_card:'Ajouter',empty_title:'Pas encore de personnes',empty_body:"Ajoutez des personnes de votre entourage pour que VISTOP ait le contexte de vos relations.",interacciones:'interaction',interacciones_pl:'interactions',sin_interacciones:"Pas encore d'interactions",name_ph:'Nom complet',role_ph:'ex: Associé, Partenaire, Mère...'},
-  de:{title:'Personen',add:'Hinzufügen',new_person:'Neue Person',lbl_name:'Name',lbl_role:'Rolle oder Beziehung',lbl_type:'Typ',principal:'Hauptperson',frecuente:'Häufig',ocasional:'Gelegentlich',save:'Speichern',cancel:'Abbrechen',add_card:'Hinzufügen',empty_title:'Noch keine Personen',empty_body:"Fügen Sie Personen aus Ihrem Umfeld hinzu damit VISTOP den Kontext Ihrer Beziehungen hat.",interacciones:'Eintrag',interacciones_pl:'Einträge',sin_interacciones:'Keine Einträge registriert',name_ph:'Vollständiger Name',role_ph:'z.B.: Partner, Mutter, Coach...'},
-  it:{title:'Persone',add:'Aggiungi',new_person:'Nuova persona',lbl_name:'Nome',lbl_role:'Ruolo o relazione',lbl_type:'Tipo',principal:'Principale',frecuente:'Frequente',ocasional:'Occasionale',save:'Salva',cancel:'Annulla',add_card:'Aggiungi',empty_title:'Nessuna persona ancora',empty_body:"Aggiungi persone del tuo ambiente per dare a VISTOP il contesto delle tue relazioni.",interacciones:'interazione',interacciones_pl:'interazioni',sin_interacciones:'Nessuna interazione registrata',name_ph:'Nome completo',role_ph:'es: Socio, Partner, Mamma...'},
-  ru:{title:'Люди',add:'Добавить',new_person:'Новый человек',lbl_name:'Имя',lbl_role:'Роль или отношения',lbl_type:'Тип',principal:'Основной',frecuente:'Частый',ocasional:'Случайный',save:'Сохранить',cancel:'Отмена',add_card:'Добавить',empty_title:'Людей пока нет',empty_body:"Добавьте людей из вашего окружения чтобы у VISTOP был контекст ваших отношений.",interacciones:'запись',interacciones_pl:'записей',sin_interacciones:'Взаимодействий не зарегистрировано',name_ph:'Полное имя',role_ph:'напр.: Партнёр, Мама, Тренер...'},
+  es:{title:'Personas',add:'Agregar',new_person:'Nueva persona',edit_person:'Editar persona',lbl_name:'Nombre',lbl_role:'Rol o relación',lbl_type:'Tipo',principal:'Principal',frecuente:'Frecuente',ocasional:'Ocasional',save:'Guardar',cancel:'Cancelar',add_card:'Agregar',empty_title:'Sin personas aún',empty_body:'Agregá personas de tu entorno para que VISTOP tenga contexto de tus relaciones.',no_results_title:'Sin resultados',no_results_body:'No encontré personas con esa búsqueda.',interacciones:'interacción',interacciones_pl:'interacciones',sin_interacciones:'Sin interacciones registradas',name_ph:'Nombre completo',role_ph:'ej: Socio, Pareja, Mamá...',search_ph:'Buscar persona...',clear:'Limpiar',delete_confirm:'¿Querés borrar esta persona? Sus frases en memoria volverán a quedar como ?.'},
+  en:{title:'People',add:'Add',new_person:'New person',edit_person:'Edit person',lbl_name:'Name',lbl_role:'Role or relationship',lbl_type:'Type',principal:'Primary',frecuente:'Frequent',ocasional:'Occasional',save:'Save',cancel:'Cancel',add_card:'Add',empty_title:'No people yet',empty_body:'Add people from your environment so VISTOP has context about your relationships.',no_results_title:'No results',no_results_body:'No people matched your search.',interacciones:'interaction',interacciones_pl:'interactions',sin_interacciones:'No interactions recorded',name_ph:'Full name',role_ph:'e.g.: Partner, Mom, Coach...',search_ph:'Search person...',clear:'Clear',delete_confirm:'Delete this person? Their memory lines will go back to ?.'},
+  pt:{title:'Pessoas',add:'Adicionar',new_person:'Nova pessoa',edit_person:'Editar pessoa',lbl_name:'Nome',lbl_role:'Função ou relação',lbl_type:'Tipo',principal:'Principal',frecuente:'Frequente',ocasional:'Ocasional',save:'Salvar',cancel:'Cancelar',add_card:'Adicionar',empty_title:'Sem pessoas ainda',empty_body:'Adicione pessoas do seu entorno para que o VISTOP tenha contexto das suas relações.',no_results_title:'Sem resultados',no_results_body:'Não encontrei pessoas com essa busca.',interacciones:'interação',interacciones_pl:'interações',sin_interacciones:'Nenhuma interação registrada',name_ph:'Nome completo',role_ph:'ex: Sócio, Parceira, Mãe...',search_ph:'Buscar pessoa...',clear:'Limpar',delete_confirm:'Quer apagar esta pessoa? As frases na memória voltarão para ?.'},
+  fr:{title:'Personnes',add:'Ajouter',new_person:'Nouvelle personne',edit_person:'Modifier personne',lbl_name:'Nom',lbl_role:'Rôle ou relation',lbl_type:'Type',principal:'Principal',frecuente:'Fréquent',ocasional:'Occasionnel',save:'Enregistrer',cancel:'Annuler',add_card:'Ajouter',empty_title:'Pas encore de personnes',empty_body:"Ajoutez des personnes de votre entourage pour que VISTOP ait le contexte de vos relations.",no_results_title:'Aucun résultat',no_results_body:'Aucune personne ne correspond à cette recherche.',interacciones:'interaction',interacciones_pl:'interactions',sin_interacciones:"Pas encore d'interactions",name_ph:'Nom complet',role_ph:'ex: Associé, Partenaire, Mère...',search_ph:'Rechercher une personne...',clear:'Effacer',delete_confirm:'Supprimer cette personne ? Ses lignes en mémoire redeviendront ?.'},
+  de:{title:'Personen',add:'Hinzufügen',new_person:'Neue Person',edit_person:'Person bearbeiten',lbl_name:'Name',lbl_role:'Rolle oder Beziehung',lbl_type:'Typ',principal:'Hauptperson',frecuente:'Häufig',ocasional:'Gelegentlich',save:'Speichern',cancel:'Abbrechen',add_card:'Hinzufügen',empty_title:'Noch keine Personen',empty_body:"Fügen Sie Personen aus Ihrem Umfeld hinzu damit VISTOP den Kontext Ihrer Beziehungen hat.",no_results_title:'Keine Ergebnisse',no_results_body:'Keine Personen passen zu dieser Suche.',interacciones:'Eintrag',interacciones_pl:'Einträge',sin_interacciones:'Keine Einträge registriert',name_ph:'Vollständiger Name',role_ph:'z.B.: Partner, Mutter, Coach...',search_ph:'Person suchen...',clear:'Löschen',delete_confirm:'Diese Person löschen? Ihre Speicherzeilen werden wieder zu ?.'},
+  it:{title:'Persone',add:'Aggiungi',new_person:'Nuova persona',edit_person:'Modifica persona',lbl_name:'Nome',lbl_role:'Ruolo o relazione',lbl_type:'Tipo',principal:'Principale',frecuente:'Frequente',ocasional:'Occasionale',save:'Salva',cancel:'Annulla',add_card:'Aggiungi',empty_title:'Nessuna persona ancora',empty_body:"Aggiungi persone del tuo ambiente per dare a VISTOP il contesto delle tue relazioni.",no_results_title:'Nessun risultato',no_results_body:'Nessuna persona corrisponde alla ricerca.',interacciones:'interazione',interacciones_pl:'interazioni',sin_interacciones:'Nessuna interazione registrata',name_ph:'Nome completo',role_ph:'es: Socio, Partner, Mamma...',search_ph:'Cerca persona...',clear:'Cancella',delete_confirm:'Vuoi eliminare questa persona? Le sue frasi in memoria torneranno a ?.'},
+  ru:{title:'Люди',add:'Добавить',new_person:'Новый человек',edit_person:'Редактировать человека',lbl_name:'Имя',lbl_role:'Роль или отношения',lbl_type:'Тип',principal:'Основной',frecuente:'Частый',ocasional:'Случайный',save:'Сохранить',cancel:'Отмена',add_card:'Добавить',empty_title:'Людей пока нет',empty_body:"Добавьте людей из вашего окружения чтобы у VISTOP был контекст ваших отношений.",no_results_title:'Нет результатов',no_results_body:'Людей по этому запросу не найдено.',interacciones:'запись',interacciones_pl:'записей',sin_interacciones:'Взаимодействий не зарегистрировано',name_ph:'Полное имя',role_ph:'напр.: Партнёр, Мама, Тренер...',search_ph:'Искать человека...',clear:'Очистить',delete_confirm:'Удалить этого человека? Его строки в памяти снова станут ?.'},
 };
 
 function getLang(){const t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
@@ -136,7 +153,6 @@ function applyLang(){
   const t=INT_T[getLang()];
   document.getElementById('int-title').textContent=t.title;
   document.getElementById('lbl-agregar').textContent=t.add;
-  document.getElementById('modal-title').textContent=t.new_person;
   document.getElementById('lbl-name').textContent=t.lbl_name;
   document.getElementById('lbl-role').textContent=t.lbl_role;
   document.getElementById('lbl-type').textContent=t.lbl_type;
@@ -147,19 +163,64 @@ function applyLang(){
   document.getElementById('btn-cancel').textContent=t.cancel;
   document.getElementById('modal-nombre').placeholder=t.name_ph;
   document.getElementById('modal-rol').placeholder=t.role_ph;
+  document.getElementById('search-personas').placeholder=t.search_ph;
+  document.getElementById('btn-clear-search').textContent=t.clear;
 }
 
 let personas=[];
-function init(){applyLang();personas=VISTOP.get('interlocutores',[])||[];renderAll();}
+let editingId=null;
+let editingOldName='';
+
+function init(){
+  applyLang();
+  personas=normalizarPersonas(VISTOP.get('interlocutores',[])||[]);
+  VISTOP.save('interlocutores',personas);
+  renderAll();
+}
+
+function normalizarPersonas(arr){
+  const vistos={};
+  return arr.filter(Boolean).map(function(p){
+    const nombre=(p.nombre||'').trim();
+    if(!nombre)return null;
+    return {
+      id:p.id||('per_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
+      nombre:nombre,
+      rol:p.rol||'',
+      tipo:p.tipo||'frecuente',
+      creado:p.creado||Date.now(),
+      actualizado:p.actualizado||p.creado||Date.now(),
+      origen:p.origen||'interlocutores'
+    };
+  }).filter(function(p){
+    const k=p.nombre.toLowerCase();
+    if(vistos[k])return false;
+    vistos[k]=true;
+    return true;
+  });
+}
 
 function contarInteracciones(nombre){return (VISTOP.get('memoria',[])||[]).filter(e=>e.speaker===nombre).length;}
 
+function getBusqueda(){return (document.getElementById('search-personas').value||'').trim().toLowerCase();}
+function filtrarPersonas(lista){
+  const q=getBusqueda();
+  if(!q)return lista;
+  return lista.filter(function(p){
+    return String(p.nombre||'').toLowerCase().includes(q) || String(p.rol||'').toLowerCase().includes(q) || String(p.tipo||'').toLowerCase().includes(q);
+  });
+}
+function limpiarBusqueda(){document.getElementById('search-personas').value='';renderAll();}
+
 function renderAll(){
   const t=INT_T[getLang()],content=document.getElementById('content');
+  const lista=filtrarPersonas(personas);
   if(!personas.length){content.innerHTML=`<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><div class="empty-title">${t.empty_title}</div><div class="empty-body">${t.empty_body}</div></div>`;return;}
+  if(!lista.length){content.innerHTML=`<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div class="empty-title">${t.no_results_title}</div><div class="empty-body">${t.no_results_body}</div></div>`;return;}
   content.innerHTML='';
   [['principal',t.principal],['frecuente',t.frecuente],['ocasional',t.ocasional]].forEach(([key,label])=>{
-    const grupo=personas.filter(p=>p.tipo===key);
+    const grupo=lista.filter(p=>p.tipo===key);
+    if(!grupo.length)return;
     const section=document.createElement('div');section.className='category';
     const header=document.createElement('div');header.className='cat-header';
     header.innerHTML=`<div class="cat-badge ${key}">${label}</div><div class="cat-count">${grupo.length}</div>`;
@@ -173,20 +234,31 @@ function renderAll(){
   });
 }
 
+function iniciales(nombre){return String(nombre||'?').split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';}
+function escapeAttr(str){return String(str||'').replace(/'/g,"&#39;").replace(/"/g,'&quot;');}
+
 function buildCard(persona){
   const t=INT_T[getLang()],card=document.createElement('div');card.className='person-card';
-  const init=persona.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const count=contarInteracciones(persona.nombre);
   const countText=count===1?`1 ${t.interacciones}`:`${count} ${t.interacciones_pl}`;
-  card.innerHTML=`<div class="person-avatar ${persona.tipo}">${init}</div><div><div class="person-name">${persona.nombre}</div><div class="person-role">${persona.rol||''}</div><div class="person-interactions">${countText}</div></div><button type="button" class="person-delete" onclick="event.stopPropagation();eliminarPersona('${persona.id}')">×</button>`;
+  card.innerHTML=`
+    <div class="person-actions">
+      <button type="button" class="person-action edit" title="Editar" onclick="event.stopPropagation();abrirEditarPersona('${escapeAttr(persona.id)}')">✎</button>
+      <button type="button" class="person-action delete" title="Borrar" onclick="event.stopPropagation();eliminarPersona('${escapeAttr(persona.id)}')">×</button>
+    </div>
+    <div class="person-avatar ${persona.tipo}">${iniciales(persona.nombre)}</div>
+    <div>
+      <div class="person-name">${persona.nombre}</div>
+      <div class="person-role">${persona.rol||''}</div>
+      <div class="person-interactions">${countText}</div>
+    </div>`;
   card.onclick=()=>abrirHistorial(persona);
   return card;
 }
 
 function abrirHistorial(persona){
   const t=INT_T[getLang()];
-  const init=persona.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  document.getElementById('h-avatar').textContent=init;
+  document.getElementById('h-avatar').textContent=iniciales(persona.nombre);
   document.getElementById('h-name').textContent=persona.nombre;
   const memoria=(VISTOP.get('memoria',[])||[]).filter(e=>e.speaker===persona.nombre);
   const count=memoria.length;
@@ -214,8 +286,6 @@ function cerrarHistorial(){document.getElementById('history-panel').classList.re
 
 function formatDayLabel(dayKey){
   const l=getLang(),today=new Date().toISOString().slice(0,10),yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
-  const t=INT_T[l];
-  // Usar today/yesterday del idioma si están disponibles
   const todayStr={es:'Hoy',en:'Today',pt:'Hoje',fr:"Aujourd'hui",de:'Heute',it:'Oggi',ru:'Сегодня'}[l]||'Hoy';
   const yestStr={es:'Ayer',en:'Yesterday',pt:'Ontem',fr:'Hier',de:'Gestern',it:'Ieri',ru:'Вчера'}[l]||'Ayer';
   if(dayKey===today)return todayStr; if(dayKey===yesterday)return yestStr;
@@ -224,27 +294,104 @@ function formatDayLabel(dayKey){
 }
 
 function abrirModal(tipoPreset){
-  document.getElementById('modal-nombre').value='';document.getElementById('modal-rol').value='';
+  editingId=null;
+  editingOldName='';
+  const t=INT_T[getLang()];
+  document.getElementById('modal-title').textContent=t.new_person;
+  document.getElementById('modal-nombre').value='';
+  document.getElementById('modal-rol').value='';
   document.getElementById('modal-tipo').value=tipoPreset||'principal';
   document.getElementById('modal-overlay').classList.add('visible');
   setTimeout(()=>document.getElementById('modal-nombre').focus(),200);
 }
 
-function cerrarModal(){document.getElementById('modal-overlay').classList.remove('visible');}
+function abrirEditarPersona(id){
+  const p=personas.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  const t=INT_T[getLang()];
+  editingId=p.id;
+  editingOldName=p.nombre;
+  document.getElementById('modal-title').textContent=t.edit_person;
+  document.getElementById('modal-nombre').value=p.nombre||'';
+  document.getElementById('modal-rol').value=p.rol||'';
+  document.getElementById('modal-tipo').value=p.tipo||'frecuente';
+  document.getElementById('modal-overlay').classList.add('visible');
+  setTimeout(()=>document.getElementById('modal-nombre').focus(),200);
+}
+
+function cerrarModal(){document.getElementById('modal-overlay').classList.remove('visible');editingId=null;editingOldName='';}
 function cerrarModalSiOverlay(e){if(e.target===document.getElementById('modal-overlay'))cerrarModal();}
 
 function guardarPersona(){
   const nombre=document.getElementById('modal-nombre').value.trim(),rol=document.getElementById('modal-rol').value.trim(),tipo=document.getElementById('modal-tipo').value;
   if(!nombre){document.getElementById('modal-nombre').focus();return;}
-  personas.push({id:Date.now().toString(),nombre,rol,tipo,creado:Date.now()});
-  VISTOP.save('interlocutores',personas);cerrarModal();renderAll();
+
+  const duplicado=personas.some(function(p){
+    return p.nombre.toLowerCase()===nombre.toLowerCase() && String(p.id)!==String(editingId||'');
+  });
+  if(duplicado){
+    document.getElementById('modal-nombre').focus();
+    return;
+  }
+
+  if(editingId){
+    personas=personas.map(function(p){
+      if(String(p.id)===String(editingId)){
+        return Object.assign({},p,{nombre:nombre,rol:rol,tipo:tipo,actualizado:Date.now()});
+      }
+      return p;
+    });
+    actualizarMemoriaPorCambioDeNombre(editingOldName,nombre);
+  }else{
+    personas.push({id:Date.now().toString(),nombre,rol,tipo,creado:Date.now(),actualizado:Date.now(),origen:'interlocutores'});
+  }
+
+  VISTOP.save('interlocutores',personas);
+  cerrarModal();
+  renderAll();
 }
 
-function eliminarPersona(id){personas=personas.filter(p=>p.id!==id);VISTOP.save('interlocutores',personas);renderAll();}
+function actualizarMemoriaPorCambioDeNombre(nombreViejo,nombreNuevo){
+  if(!nombreViejo||!nombreNuevo||nombreViejo===nombreNuevo)return;
+  const memoria=VISTOP.get('memoria',[])||[];
+  let cambio=false;
+  memoria.forEach(function(e){
+    if(e.speaker===nombreViejo){
+      e.speaker=nombreNuevo;
+      e.speakerUpdatedAt=Date.now();
+      e.speakerManual=true;
+      cambio=true;
+    }
+  });
+  if(cambio)VISTOP.save('memoria',memoria);
+}
+
+function eliminarPersona(id){
+  const t=INT_T[getLang()];
+  const p=personas.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  if(!confirm(t.delete_confirm))return;
+
+  personas=personas.filter(x=>String(x.id)!==String(id));
+  VISTOP.save('interlocutores',personas);
+
+  const memoria=VISTOP.get('memoria',[])||[];
+  let cambio=false;
+  memoria.forEach(function(e){
+    if(e.speaker===p.nombre){
+      e.speaker='?';
+      e.speakerDeletedAt=Date.now();
+      cambio=true;
+    }
+  });
+  if(cambio)VISTOP.save('memoria',memoria);
+
+  renderAll();
+}
 
 window.addEventListener('message',function(event){
   if(event.data&&event.data.type==='VISTOP_LANG_CHANGE'){applyLang();renderAll();}
-  if(event.data&&event.data.type==='VISTOP_SPEAKER_IDENTIFIED'){personas=VISTOP.get('interlocutores',[])||[];renderAll();}
+  if(event.data&&event.data.type==='VISTOP_SPEAKER_IDENTIFIED'){personas=normalizarPersonas(VISTOP.get('interlocutores',[])||[]);renderAll();}
 });
 
 init();
