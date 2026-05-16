@@ -20,6 +20,8 @@
   .speaker-chip{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:var(--font-display);font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
   .speaker-chip.titular-chip.active{border-color:rgba(0,212,255,0.5);color:var(--cyan);background:rgba(0,212,255,0.1);}
   .speaker-chip.otro-chip.active{border-color:rgba(123,47,255,0.5);color:#C89FFF;background:rgba(123,47,255,0.1);}
+  .speaker-chip.identificar-chip{border-color:rgba(255,183,71,0.25);color:#FFB347;background:rgba(255,183,71,0.06);}
+  .speaker-chip.identificar-chip:active{background:rgba(255,183,71,0.14);}
   .speaker-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
   .interim-bar{padding:8px 16px;min-height:36px;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;}
   .interim-bar span{font-size:14px;color:rgba(255,255,255,0.35);font-style:italic;}
@@ -67,11 +69,14 @@
   <div class="speaker-bar">
     <span class="speaker-label" id="lbl-habla">Habla:</span>
     <div class="speaker-chips">
-      <div class="speaker-chip titular-chip active" id="chip-titular" onclick="setSpeaker('titular')">
+      <div class="speaker-chip titular-chip" id="chip-titular" onclick="setSpeaker('titular')">
         <div class="speaker-dot"></div><span id="titular-chip-name">Titular</span>
       </div>
-      <div class="speaker-chip otro-chip" id="chip-otro" onclick="setSpeaker('unknown')">
-        <div class="speaker-dot"></div><span id="otro-chip-label">Otro habla</span>
+      <div class="speaker-chip otro-chip active" id="chip-otro" onclick="setSpeaker('unknown')">
+        <div class="speaker-dot"></div><span id="otro-chip-label">Persona no identificada</span>
+      </div>
+      <div class="speaker-chip identificar-chip" id="chip-identificar" onclick="abrirModalIdentificar()">
+        <div class="speaker-dot"></div><span id="identificar-chip-label">Identificar persona</span>
       </div>
     </div>
   </div>
@@ -102,20 +107,30 @@
 <script>
 var VISTOP=window.parent&&window.parent.VISTOP?window.parent.VISTOP:{get:function(){return null;},save:function(){},append:function(){}};
 var AppState=window.parent&&window.parent.AppState?window.parent.AppState:{};
-var speakerActual='titular',sessionStart=Date.now();
+var speakerActual='unknown',sessionStart=Date.now();
 
 var ESC_T={
-  es:{title:'Escucha',today:'Hoy',yesterday:'Ayer',empty_title:'Sin transcripciones aún',empty_body:'Tocá el micrófono arriba y empezá a hablar.',habla:'Habla:',otro:'Otro habla',modal_title:'¿Quién habló?',modal_sub:'Identificá esta voz para registrarla',modal_or:'— o escribí un nombre nuevo —',modal_ph:'Nombre de la persona...',identificar:'Identificar',cancelar:'Cancelar'},
-  en:{title:'Listen',today:'Today',yesterday:'Yesterday',empty_title:'No transcriptions yet',empty_body:'Tap the microphone above and start speaking.',habla:'Speaking:',otro:'Someone else',modal_title:'Who spoke?',modal_sub:'Identify this voice to register it',modal_or:'— or type a new name —',modal_ph:"Person's name...",identificar:'Identify',cancelar:'Cancel'},
-  pt:{title:'Escuta',today:'Hoje',yesterday:'Ontem',empty_title:'Sem transcrições ainda',empty_body:'Toque no microfone acima e comece a falar.',habla:'Fala:',otro:'Outro fala',modal_title:'Quem falou?',modal_sub:'Identifique esta voz para registrá-la',modal_or:'— ou escreva um novo nome —',modal_ph:'Nome da pessoa...',identificar:'Identificar',cancelar:'Cancelar'},
-  fr:{title:'Écoute',today:"Aujourd'hui",yesterday:'Hier',empty_title:'Pas encore de transcriptions',empty_body:'Appuyez sur le microphone en haut et commencez à parler.',habla:'Parle :',otro:"Quelqu'un d'autre",modal_title:'Qui a parlé ?',modal_sub:"Identifiez cette voix pour l'enregistrer",modal_or:'— ou tapez un nouveau nom —',modal_ph:'Nom de la personne...',identificar:'Identifier',cancelar:'Annuler'},
-  de:{title:'Zuhören',today:'Heute',yesterday:'Gestern',empty_title:'Noch keine Transkriptionen',empty_body:'Tippen Sie auf das Mikrofon oben und beginnen Sie zu sprechen.',habla:'Spricht:',otro:'Jemand anderes',modal_title:'Wer hat gesprochen?',modal_sub:'Identifizieren Sie diese Stimme',modal_or:'— oder geben Sie einen neuen Namen ein —',modal_ph:'Name der Person...',identificar:'Identifizieren',cancelar:'Abbrechen'},
-  it:{title:'Ascolto',today:'Oggi',yesterday:'Ieri',empty_title:'Nessuna trascrizione ancora',empty_body:'Tocca il microfono in alto e inizia a parlare.',habla:'Parla:',otro:'Qualcun altro',modal_title:'Chi ha parlato?',modal_sub:'Identifica questa voce per registrarla',modal_or:'— o scrivi un nuovo nome —',modal_ph:'Nome della persona...',identificar:'Identifica',cancelar:'Annulla'},
-  ru:{title:'Слушать',today:'Сегодня',yesterday:'Вчера',empty_title:'Транскрипций пока нет',empty_body:'Нажмите на микрофон вверху и говорите.',habla:'Говорит:',otro:'Кто-то другой',modal_title:'Кто говорил?',modal_sub:'Определите этот голос для записи',modal_or:'— или введите новое имя —',modal_ph:'Имя человека...',identificar:'Определить',cancelar:'Отмена'},
+  es:{title:'Escucha',today:'Hoy',yesterday:'Ayer',empty_title:'Sin transcripciones aún',empty_body:'Tocá el micrófono arriba y empezá a hablar.',habla:'Habla:',otro:'Persona no identificada',identificar_chip:'Identificar persona',modal_title:'¿Quién habló?',modal_sub:'Identificá esta voz para registrarla',modal_or:'— o escribí un nombre nuevo —',modal_ph:'Nombre de la persona...',identificar:'Identificar',cancelar:'Cancelar'},
+  en:{title:'Listen',today:'Today',yesterday:'Yesterday',empty_title:'No transcriptions yet',empty_body:'Tap the microphone above and start speaking.',habla:'Speaking:',otro:'Unidentified person',identificar_chip:'Identify person',modal_title:'Who spoke?',modal_sub:'Identify this voice to register it',modal_or:'— or type a new name —',modal_ph:"Person's name...",identificar:'Identify',cancelar:'Cancel'},
+  pt:{title:'Escuta',today:'Hoje',yesterday:'Ontem',empty_title:'Sem transcrições ainda',empty_body:'Toque no microfone acima e comece a falar.',habla:'Fala:',otro:'Pessoa não identificada',identificar_chip:'Identificar pessoa',modal_title:'Quem falou?',modal_sub:'Identifique esta voz para registrá-la',modal_or:'— ou escreva um novo nome —',modal_ph:'Nome da pessoa...',identificar:'Identificar',cancelar:'Cancelar'},
+  fr:{title:'Écoute',today:"Aujourd'hui",yesterday:'Hier',empty_title:'Pas encore de transcriptions',empty_body:'Appuyez sur le microphone en haut et commencez à parler.',habla:'Parle :',otro:'Personne non identifiée',identificar_chip:'Identifier personne',modal_title:'Qui a parlé ?',modal_sub:"Identifiez cette voix pour l'enregistrer",modal_or:'— ou tapez un nouveau nom —',modal_ph:'Nom de la personne...',identificar:'Identifier',cancelar:'Annuler'},
+  de:{title:'Zuhören',today:'Heute',yesterday:'Gestern',empty_title:'Noch keine Transkriptionen',empty_body:'Tippen Sie auf das Mikrofon oben und beginnen Sie zu sprechen.',habla:'Spricht:',otro:'Unbekannte Person',identificar_chip:'Person identifizieren',modal_title:'Wer hat gesprochen?',modal_sub:'Identifizieren Sie diese Stimme',modal_or:'— oder geben Sie einen neuen Namen ein —',modal_ph:'Name der Person...',identificar:'Identifizieren',cancelar:'Abbrechen'},
+  it:{title:'Ascolto',today:'Oggi',yesterday:'Ieri',empty_title:'Nessuna trascrizione ancora',empty_body:'Tocca il microfono in alto e inizia a parlare.',habla:'Parla:',otro:'Persona non identificata',identificar_chip:'Identifica persona',modal_title:'Chi ha parlato?',modal_sub:'Identifica questa voce per registrarla',modal_or:'— o scrivi un nuovo nome —',modal_ph:'Nome della persona...',identificar:'Identifica',cancelar:'Annulla'},
+  ru:{title:'Слушать',today:'Сегодня',yesterday:'Вчера',empty_title:'Транскрипций пока нет',empty_body:'Нажмите на микрофон вверху и говорите.',habla:'Говорит:',otro:'Неизвестный человек',identificar_chip:'Определить человека',modal_title:'Кто говорил?',modal_sub:'Определите этот голос для записи',modal_or:'— или введите новое имя —',modal_ph:'Имя человека...',identificar:'Определить',cancelar:'Отмена'},
 };
 
 function getLang(){var t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
-function getTitularName(){var t=VISTOP.get('titular',{});return t&&t.nombre?t.nombre.split(' ')[0]:'Titular';}
+function getTitularName(){
+  var t=VISTOP.get('titular',{})||{};
+  var nombre=(t.titularNombre||t.nombre||t.name||VISTOP.get('titular_nombre','')||'').toString().trim();
+  if(!nombre){
+    try{
+      var raw=localStorage.getItem('vistop_titular')||localStorage.getItem('vistop_usuario')||localStorage.getItem('vistop_user');
+      if(raw){var obj=JSON.parse(raw);nombre=(obj.titularNombre||obj.nombre||obj.name||'').toString().trim();}
+    }catch(e){}
+  }
+  return nombre?nombre.split(' ')[0]:'Titular';
+}
 
 function applyLang(){
   var t=ESC_T[getLang()];
@@ -123,8 +138,9 @@ function applyLang(){
   document.getElementById('empty-title').textContent=t.empty_title;
   document.getElementById('empty-body').textContent=t.empty_body;
   document.getElementById('lbl-habla').textContent=t.habla;
-  document.getElementById('otro-chip-label').textContent=t.otro;
   document.getElementById('titular-chip-name').textContent=getTitularName();
+  document.getElementById('otro-chip-label').textContent=(speakerActual&&speakerActual!=='unknown'&&speakerActual!=='titular')?speakerActual:t.otro;
+  document.getElementById('identificar-chip-label').textContent=t.identificar_chip;
   document.getElementById('modal-id-title').textContent=t.modal_title;
   document.getElementById('modal-id-sub').textContent=t.modal_sub;
   document.getElementById('modal-or').textContent=t.modal_or;
@@ -142,6 +158,7 @@ function formatDayLabel(dayKey){
 
 function init(){
   applyLang();sessionStart=Date.now();
+  setSpeaker('unknown');
   var memoria=VISTOP.get('memoria',[]);
   if(memoria&&memoria.length){
     document.getElementById('empty-state').style.display='none';
@@ -166,10 +183,10 @@ function buildLine(entry){
   var time=new Date(entry.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   var tit=getTitularName();
   var spClass='sp-titular';
-  if(entry.speaker==='?')spClass='sp-unknown';
+  if(!entry.speaker||entry.speaker==='?')spClass='sp-unknown';
   else if(entry.speaker!==tit&&entry.speaker!=='Titular')spClass='sp-inter';
-  var spEl=document.createElement('span');spEl.className='line-speaker '+spClass;spEl.textContent=entry.speaker+':';
-  if(entry.speaker==='?')spEl.onclick=function(){abrirModalIdentificar();};
+  var spEl=document.createElement('span');spEl.className='line-speaker '+spClass;spEl.textContent=(entry.speaker||'?')+':';
+  if(!entry.speaker||entry.speaker==='?')spEl.onclick=function(){abrirModalIdentificar();};
   line.innerHTML='<span class="line-time">'+time+'</span>';
   line.appendChild(spEl);
   var tx=document.createElement('span');tx.className='line-text';tx.textContent=entry.text;line.appendChild(tx);
@@ -191,8 +208,10 @@ function addLine(entry){
 
 function setSpeaker(type){
   speakerActual=type;
+  var t=ESC_T[getLang()];
   document.getElementById('chip-titular').classList.toggle('active',type==='titular');
-  document.getElementById('chip-otro').classList.toggle('active',type==='unknown');
+  document.getElementById('chip-otro').classList.toggle('active',type!=='titular');
+  document.getElementById('otro-chip-label').textContent=(type&&type!=='unknown'&&type!=='titular')?type:t.otro;
   window.parent&&window.parent.postMessage&&window.parent.postMessage({type:'VISTOP_SET_SPEAKER',data:{speaker:type}},'*');
 }
 
@@ -220,10 +239,7 @@ function confirmarIdentificacion(){
   window.parent&&window.parent.postMessage({type:'VISTOP_IDENTIFY_SPEAKER',data:{newSpeaker:nombre,sessionStart:sessionStart}},'*');
   cerrarModalIdentificar();
   document.querySelectorAll('.sp-unknown').forEach(function(el){el.textContent=nombre+':';el.className='line-speaker sp-inter';el.onclick=null;});
-  speakerActual=nombre;
-  document.getElementById('chip-titular').classList.remove('active');
-  document.getElementById('chip-otro').classList.add('active');
-  document.getElementById('otro-chip-label').textContent=nombre;
+  setSpeaker(nombre);
 }
 
 window.addEventListener('message',function(event){
@@ -231,14 +247,14 @@ window.addEventListener('message',function(event){
   if(type==='VISTOP_TRANSCRIPT'){
     if(msg.isFinal){
       document.getElementById('interim-text').textContent='';
-      addLine({speaker:msg.speaker||getTitularName(),text:msg.text,ts:msg.timestamp||Date.now()});
+      var speaker=(msg.speaker&&String(msg.speaker).trim())?msg.speaker:'?';
+      addLine({speaker:speaker,text:msg.text,ts:msg.timestamp||Date.now()});
     } else {
       document.getElementById('interim-text').textContent=msg.text;
     }
   }
   if(type==='VISTOP_SPEAKER_IDENTIFIED'){
-    document.getElementById('otro-chip-label').textContent=msg.speaker;
-    speakerActual=msg.speaker;
+    setSpeaker(msg.speaker);
     document.querySelectorAll('.sp-unknown').forEach(function(el){el.textContent=msg.speaker+':';el.className='line-speaker sp-inter';el.onclick=null;});
   }
   if(type==='VISTOP_LANG_CHANGE')applyLang();
