@@ -48,7 +48,6 @@
   .line-speaker.sp-u{color:#C89FFF;}
   .line-speaker.sp-i{color:#FFB347;}
   .line-text{font-size:14px;color:var(--text-primary);line-height:1.6;flex:1;}
-  .line-text mark{background:rgba(0,212,255,0.25);color:var(--cyan);border-radius:3px;padding:0 2px;}
   .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 24px;text-align:center;}
   .empty-title{font-family:var(--font-display);font-size:16px;font-weight:700;color:rgba(255,255,255,0.6);}
   .empty-body{font-size:13px;color:rgba(255,255,255,0.35);max-width:240px;line-height:1.6;}
@@ -82,10 +81,21 @@
   </div>
 </div>
 <script>
-const VISTOP=window.parent?.VISTOP||{
-  get:function(){return [];},
-  save:function(){},
-  append:function(){}
+const VISTOP=(window.parent&&window.parent.VISTOP)?window.parent.VISTOP:{
+  get:function(k,fb){
+    try{
+      const r=localStorage.getItem('vistop_'+k);
+      return r!==null?JSON.parse(r):(fb!==undefined?fb:null);
+    }catch(e){return fb!==undefined?fb:null;}
+  },
+  save:function(k,v){
+    try{localStorage.setItem('vistop_'+k,JSON.stringify(v));}catch(e){}
+  },
+  append:function(k,item){
+    const a=this.get(k,[])||[];
+    a.push(item);
+    this.save(k,a);
+  }
 };
 
 let todaLaMemoria=[];
@@ -98,10 +108,19 @@ const MEM_T={
   fr:{title:'Mémoire',desde:'De',hasta:'À',search:'Rechercher...',clear:'Effacer',empty_title:'Pas encore de données',empty_body:'Les transcriptions apparaîtront ici automatiquement.',today:"Aujourd'hui",yesterday:'Hier',records:'entrée',records_pl:'entrées',todos:'Tous',asignando:'Attribution à',sin_asignar:'Touchez une personne du carrousel pour attribuer des lignes',nuevo:'Nouveau'},
   de:{title:'Speicher',desde:'Von',hasta:'Bis',search:'Suchen...',clear:'Löschen',empty_title:'Noch keine Aufzeichnungen',empty_body:'Transkriptionen erscheinen hier automatisch.',today:'Heute',yesterday:'Gestern',records:'Eintrag',records_pl:'Einträge',todos:'Alle',asignando:'Zuordnung zu',sin_asignar:'Tippen Sie auf eine Person im Karussell, um Zeilen zuzuordnen',nuevo:'Neu'},
   it:{title:'Memoria',desde:'Da',hasta:'A',search:'Cerca...',clear:'Cancella',empty_title:'Nessun record ancora',empty_body:'Le trascrizioni appariranno qui automaticamente.',today:'Oggi',yesterday:'Ieri',records:'record',records_pl:'record',todos:'Tutti',asignando:'Assegnando a',sin_asignar:'Tocca una persona nel carosello per assegnare frasi',nuevo:'Nuovo'},
-  ru:{title:'Память',desde:'С',hasta:'До',search:'Поиск...',clear:'Очистить',empty_title:'Записей пока нет',empty_body:'Транскрипции появятся здесь автоматически.',today:'Сегодня',yesterday:'Вчера',records:'запись',records_pl:'записей',todos:'Все',asignando:'Назначается',sin_asignar:'Нажмите на человека в карусели, чтобы назначать строки',nuevo:'Новый'},
+  ru:{title:'Память',desde:'С',hasta:'До',search:'Поиск...',clear:'Очистить',empty_title:'Записей пока нет',empty_body:'Транскрипции появятся здесь автоматически.',today:'Сегодня',yesterday:'Вчера',records:'запись',records_pl:'записей',todos:'Все',asignando:'Назначается',sin_asignar:'Нажмите на человека в карусели, чтобы назначать строки',nuevo:'Новый'}
 };
 
-function getLang(){const t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
+function getLang(){
+  const t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';
+  if(i.startsWith('en'))return 'en';
+  if(i.startsWith('pt'))return 'pt';
+  if(i.startsWith('fr'))return 'fr';
+  if(i.startsWith('de'))return 'de';
+  if(i.startsWith('it'))return 'it';
+  if(i.startsWith('ru'))return 'ru';
+  return 'es';
+}
 
 function getTitularName(){
   const t=VISTOP.get('titular',{})||{};
@@ -143,10 +162,7 @@ function init(){
     }
   });
 
-  if(cambio){
-    VISTOP.save('memoria',todaLaMemoria);
-  }
-
+  if(cambio){VISTOP.save('memoria',todaLaMemoria);}
   renderPersonFilter();
   aplicarFiltros();
 }
@@ -167,85 +183,25 @@ function renderPersonFilter(){
     wrap.appendChild(chip);
   }
 
-  // Siempre primero: Todos
   crearChip(t.todos,null,'');
-
-  // Después: signo de pregunta
   crearChip('?','?','unknown-chip');
 
   const titular=getTitularName();
   const inters=VISTOP.get('interlocutores',[])||[];
-
   const nombres={};
 
-  // Agregar titular
-  if(titular && titular!=='Titular'){
-    nombres[titular]=true;
-  }
+  if(titular && titular!=='Titular'){nombres[titular]=true;}
 
-  // Agregar personas guardadas en Interlocutores
-  inters.forEach(function(p){
-    if(p&&p.nombre)nombres[p.nombre]=true;
-  });
+  inters.forEach(function(p){if(p&&p.nombre)nombres[p.nombre]=true;});
 
-  // Agregar personas que ya aparezcan en Memoria
   todaLaMemoria.forEach(function(e){
     const sp=e.speaker;
-    if(sp && sp!=='?' && sp!=='Titular'){
-      nombres[sp]=true;
-    }
+    if(sp && sp!=='?' && sp!=='Titular'){nombres[sp]=true;}
   });
 
-  // Orden alfabético real
-  Object.keys(nombres)
-    .sort(function(a,b){
-      return a.localeCompare(b,'es',{sensitivity:'base'});
-    })
-    .forEach(function(nombre){
-      crearChip(nombre,nombre,'');
-    });
-
-  // Siempre al final: botón +
-  const plus=document.createElement('div');
-  plus.className='person-chip plus-chip';
-  plus.textContent='+';
-  plus.onclick=function(){crearNuevaPersona();};
-  wrap.appendChild(plus);
-}
-
-  function crearChip(nombre, valor, claseExtra){
-    const chip=document.createElement('div');
-    chip.className='person-chip '+(claseExtra||'')+(personaActiva===valor?' active':'');
-    chip.textContent=nombre;
-    chip.onclick=function(){
-      personaActiva=valor;
-      renderPersonFilter();
-      actualizarEstadoAsignacion();
-    };
-    wrap.appendChild(chip);
-  }
-
-  crearChip(t.todos,null,'');
-
-  const titular=getTitularName();
-  crearChip(titular,titular,'');
-  crearChip('?','?','unknown-chip');
-
-  const inters=VISTOP.get('interlocutores',[])||[];
-  const nombresMemoria=[...new Set(todaLaMemoria.map(function(e){return e.speaker;}))]
-    .filter(function(sp){return sp && sp!=='?' && sp!==titular && sp!=='Titular';});
-
-  const nombres={};
-
-  inters.forEach(function(p){
-    if(p&&p.nombre)nombres[p.nombre]=true;
-  });
-
-  nombresMemoria.forEach(function(n){
-    nombres[n]=true;
-  });
-
-  Object.keys(nombres).sort().forEach(function(nombre){
+  Object.keys(nombres).sort(function(a,b){
+    return a.localeCompare(b,'es',{sensitivity:'base'});
+  }).forEach(function(nombre){
     crearChip(nombre,nombre,'');
   });
 
@@ -261,19 +217,21 @@ function actualizarEstadoAsignacion(){
   const status=document.getElementById('assign-status');
   if(!status)return;
   if(personaActiva){
-    status.innerHTML=t.asignando+': <span>'+personaActiva+'</span>. Tocá el nombre de la línea que quieras cambiar.';
+    status.innerHTML=t.asignando+': <span>'+escapeHtml(personaActiva)+'</span>. Tocá el nombre de la línea que quieras cambiar.';
   }else{
     status.textContent=t.sin_asignar;
   }
 }
 
 function aplicarFiltros(){
-  const desde=document.getElementById('filter-desde').value,hasta=document.getElementById('filter-hasta').value,texto=document.getElementById('filter-texto').value.trim().toLowerCase();
+  const desde=document.getElementById('filter-desde').value;
+  const hasta=document.getElementById('filter-hasta').value;
+  const texto=document.getElementById('filter-texto').value.trim().toLowerCase();
   let f=[...todaLaMemoria];
   if(desde) f=f.filter(e=>e.ts>=new Date(desde).getTime());
   if(hasta) f=f.filter(e=>e.ts<=new Date(hasta).getTime());
   if(texto) f=f.filter(e=>String(e.text||'').toLowerCase().includes(texto));
-  renderMemoria(f,texto);
+  renderMemoria(f);
 }
 
 function limpiarFiltros(){
@@ -286,23 +244,27 @@ function limpiarFiltros(){
   aplicarFiltros();
 }
 
-function renderMemoria(entries,highlight){
+function renderMemoria(entries){
   const list=document.getElementById('memory-list'),empty=document.getElementById('empty-state'),count=document.getElementById('result-count'),t=MEM_T[getLang()];
   Array.from(list.children).forEach(c=>{if(c.id!=='empty-state')c.remove();});
   if(!entries.length){empty.style.display='flex';count.innerHTML='';return;}
   empty.style.display='none';
-  count.innerHTML=`<span>${entries.length}</span> ${entries.length!==1?t.records_pl:t.records}`;
+  count.innerHTML='<span>'+entries.length+'</span> '+(entries.length!==1?t.records_pl:t.records);
   const grouped={};
-  entries.forEach(e=>{const k=new Date(e.ts).toISOString().slice(0,10);if(!grouped[k])grouped[k]=[];grouped[k].push(e);});
+  entries.forEach(e=>{
+    const k=new Date(e.ts).toISOString().slice(0,10);
+    if(!grouped[k])grouped[k]=[];
+    grouped[k].push(e);
+  });
   Object.keys(grouped).sort().reverse().forEach(dayKey=>{
     const block=document.createElement('div');block.className='day-block';
     const label=document.createElement('div');label.className='day-label';label.textContent=formatDayLabel(dayKey);block.appendChild(label);
-    [...grouped[dayKey]].sort((a,b)=>b.ts-a.ts).forEach(e=>block.appendChild(buildLine(e,highlight)));
+    grouped[dayKey].slice().sort((a,b)=>b.ts-a.ts).forEach(e=>block.appendChild(buildLine(e)));
     list.insertBefore(block,empty);
   });
 }
 
-function buildLine(entry,highlight){
+function buildLine(entry){
   const line=document.createElement('div');
   line.className='memory-line';
   line.dataset.id=entry.id;
@@ -313,12 +275,6 @@ function buildLine(entry,highlight){
   let spClass='sp-t';
   if(entry.speaker==='?')spClass='sp-u';
   else if(entry.speaker!==tit&&entry.speaker!=='Titular')spClass='sp-i';
-
-  let tx=String(entry.text||'');
-  if(highlight){
-    const rg=new RegExp(`(${escapeRegex(highlight)})`,'gi');
-    tx=tx.replace(rg,'<mark>$1</mark>');
-  }
 
   const timeEl=document.createElement('span');
   timeEl.className='line-time';
@@ -331,7 +287,7 @@ function buildLine(entry,highlight){
 
   const textEl=document.createElement('span');
   textEl.className='line-text';
-  textEl.innerHTML=tx;
+  textEl.textContent=String(entry.text||'');
 
   line.appendChild(timeEl);
   line.appendChild(speakerEl);
@@ -341,9 +297,7 @@ function buildLine(entry,highlight){
 }
 
 function asignarPersonaALinea(id){
-  if(!personaActiva){
-    return;
-  }
+  if(!personaActiva){return;}
 
   todaLaMemoria=todaLaMemoria.map(function(e){
     if(e.id===id){
@@ -356,66 +310,52 @@ function asignarPersonaALinea(id){
 
   guardarInterlocutorSiHaceFalta(personaActiva);
   VISTOP.save('memoria',todaLaMemoria);
-
   renderPersonFilter();
   aplicarFiltros();
 }
 
 function guardarInterlocutorSiHaceFalta(nombre){
-  if(!nombre || nombre==='?' || nombre===getTitularName() || nombre==='Titular'){
-    return;
-  }
+  if(!nombre || nombre==='?' || nombre===getTitularName() || nombre==='Titular'){return;}
 
-  var inters=VISTOP.get('interlocutores',[])||[];
-  var existe=inters.some(function(p){
-    return p.nombre && p.nombre.toLowerCase()===nombre.toLowerCase();
-  });
+  let inters=VISTOP.get('interlocutores',[])||[];
+  const existe=inters.some(function(p){return p.nombre && p.nombre.toLowerCase()===nombre.toLowerCase();});
 
   if(!existe){
-    inters.push({
-      id:Date.now().toString(),
-      nombre:nombre,
-      rol:'',
-      tipo:'frecuente',
-      creado:Date.now(),
-      origen:'memoria_manual'
-    });
+    inters.push({id:Date.now().toString(),nombre:nombre,rol:'',tipo:'frecuente',creado:Date.now(),origen:'memoria_manual'});
     VISTOP.save('interlocutores',inters);
   }
 }
 
 function crearNuevaPersona(){
-  var nombre=prompt('Nombre de la persona:');
+  let nombre=prompt('Nombre de la persona:');
   if(!nombre)return;
-
   nombre=nombre.trim();
   if(!nombre)return;
-
   guardarInterlocutorSiHaceFalta(nombre);
   personaActiva=nombre;
-
   renderPersonFilter();
   actualizarEstadoAsignacion();
 }
 
 function formatDayLabel(dayKey){
   const t=MEM_T[getLang()],today=new Date().toISOString().slice(0,10),yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
-  if(dayKey===today)return t.today; if(dayKey===yesterday)return t.yesterday;
+  if(dayKey===today)return t.today;
+  if(dayKey===yesterday)return t.yesterday;
   const l=getLang(),locale=l==='en'?'en-US':l==='de'?'de-DE':l==='fr'?'fr-FR':l==='it'?'it-IT':l==='pt'?'pt-BR':l==='ru'?'ru-RU':'es-AR';
   return new Date(dayKey+'T12:00:00').toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long'});
 }
 
-function escapeRegex(str){return str.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"]/g,function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];
+  });
+}
 
 window.addEventListener('message',function(event){
-  const{type,text,isFinal,timestamp,speaker}=event.data||{};
-  if(type==='VISTOP_TRANSCRIPT'&&isFinal&&text){
-    todaLaMemoria.push({
-      id:'mem_'+(timestamp||Date.now())+'_'+Math.random().toString(36).slice(2,6),
-      speaker:speaker||'?',
-      text:text,
-      ts:timestamp||Date.now()
-    });
+  const data=event.data||{};
+  const type=data.type;
+  if(type==='VISTOP_TRANSCRIPT'&&data.isFinal&&data.text){
+    todaLaMemoria.push({id:'mem_'+(data.timestamp||Date.now())+'_'+Math.random().toString(36).slice(2,6),speaker:data.speaker||'?',text:data.text,ts:data.timestamp||Date.now()});
     VISTOP.save('memoria',todaLaMemoria);
     renderPersonFilter();
     aplicarFiltros();
