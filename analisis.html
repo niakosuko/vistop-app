@@ -17,71 +17,78 @@
     --turak:#00D4FF; --cirak:#C89FFF;
   }
   html,body{width:100%;height:100%;background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:16px;line-height:1.5;overflow-y:auto;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
-  .screen{padding:20px 20px 100px;}
-  .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .screen{padding:14px 16px 90px;}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08);}
   .top-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
   .counter-chip{font-family:var(--font-display);font-size:12px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--text-muted);}
   .counter-chip.activo{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.3);color:var(--cyan);}
-  .modo-row{display:flex;gap:8px;margin-bottom:16px;}
-  .modo-btn{flex:1;padding:12px 0;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);font-family:var(--font-display);font-size:14px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;}
+  .modo-row{display:flex;gap:8px;margin-bottom:10px;}
+  .modo-btn{flex:1;padding:10px 0;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);font-family:var(--font-display);font-size:14px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;}
   .modo-btn.sel-turak{background:rgba(0,212,255,0.15);color:var(--turak);border-color:rgba(0,212,255,0.4);}
   .modo-btn.sel-cirak{background:rgba(200,159,255,0.15);color:var(--cirak);border-color:rgba(200,159,255,0.4);}
-  .longitud-row{display:flex;gap:6px;margin-bottom:20px;}
-  .long-btn{flex:1;padding:10px 0;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);font-family:var(--font-display);font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;}
+  .longitud-row{display:flex;gap:6px;margin-bottom:12px;}
+  .long-btn{flex:1;padding:8px 0;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);font-family:var(--font-display);font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;}
   .long-btn.active{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3);color:#fff;}
-  .desc-card{padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:20px;display:flex;gap:12px;align-items:center;}
-  .desc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+  .desc-card{padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:12px;display:flex;gap:10px;align-items:center;}
+  .desc-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;}
   .desc-icon.turak{background:rgba(0,212,255,0.12);}
   .desc-icon.cirak{background:rgba(200,159,255,0.12);}
   .desc-name{font-family:var(--font-display);font-size:14px;font-weight:700;}
   .desc-name.turak{color:var(--turak);}
   .desc-name.cirak{color:var(--cirak);}
-  .desc-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
-  .analyze-btn{width:100%;padding:17px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;}
+  .desc-sub{font-size:12px;color:var(--text-muted);margin-top:1px;}
+  .analyze-btn{width:100%;padding:14px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px;}
   .analyze-btn.turak{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;box-shadow:0 4px 24px rgba(0,212,255,0.25);}
   .analyze-btn.cirak{background:linear-gradient(135deg,#C89FFF,#7B2FFF);color:#fff;box-shadow:0 4px 24px rgba(123,47,255,0.25);}
   .analyze-btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
-  .loading-wrap{display:none;flex-direction:column;align-items:center;gap:14px;padding:28px 0;}
+  .loading-wrap{display:none;flex-direction:column;align-items:center;gap:12px;padding:18px 0;}
   .loading-wrap.visible{display:flex;}
   .loading-dots{display:flex;gap:8px;}
   .loading-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.3);animation:loading-bounce 1.2s ease-in-out infinite;}
   .loading-dot:nth-child(2){animation-delay:0.2s}.loading-dot:nth-child(3){animation-delay:0.4s}
   @keyframes loading-bounce{0%,100%{transform:translateY(0);opacity:0.3}50%{transform:translateY(-7px);opacity:1}}
   .loading-text{font-size:14px;color:var(--text-secondary);font-style:italic;text-align:center;max-width:260px;}
-  .result-card{display:none;flex-direction:column;gap:16px;border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-card);padding:22px 18px;margin-bottom:16px;}
+  .result-card{display:none;flex-direction:column;gap:10px;border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-card);padding:14px 14px;margin-bottom:12px;}
   .result-card.visible{display:flex;}
   .result-card.turak{border-color:rgba(0,212,255,0.25);background:rgba(0,212,255,0.04);}
   .result-card.cirak{border-color:rgba(200,159,255,0.25);background:rgba(200,159,255,0.04);}
-  .result-header{display:flex;align-items:center;gap:10px;}
+  .result-header{display:flex;align-items:center;gap:8px;}
   .result-icon{font-size:20px;}
   .result-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;flex:1;}
   .result-title.turak{color:var(--turak);}
   .result-title.cirak{color:var(--cirak);}
-  .result-text{font-size:15px;color:var(--text-primary);line-height:1.9;white-space:pre-wrap;}
-  .escuchar-grande{width:100%;padding:14px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;margin-top:4px;}
+  .result-text{font-size:14px;color:var(--text-primary);line-height:1.65;white-space:pre-wrap;}
+  .escuchar-grande{width:100%;padding:12px;border-radius:var(--radius-pill);border:none;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;margin:0 0 4px;}
   .escuchar-grande.turak{background:rgba(0,212,255,0.12);color:var(--turak);border:1px solid rgba(0,212,255,0.25);}
   .escuchar-grande.cirak{background:rgba(200,159,255,0.12);color:var(--cirak);border:1px solid rgba(200,159,255,0.25);}
   .escuchar-grande.hablando{opacity:0.7;}
   .escuchar-grande:active{transform:scale(0.97);}
-  .mas-btn{width:100%;padding:14px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-bottom:16px;display:none;}
+  .mas-btn{width:100%;padding:12px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-bottom:12px;display:none;}
   .mas-btn.visible{display:block;}
   .mas-btn:active{background:rgba(255,255,255,0.1);color:#fff;}
-  .voice-section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;margin-bottom:20px;}
+  .voice-section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:12px 14px;margin-bottom:16px;}
   .voice-label{font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;}
   .voice-row{display:flex;flex-direction:column;gap:10px;}
   .voice-item{display:flex;flex-direction:column;gap:6px;}
   .voice-item-label{font-size:12px;color:rgba(255,255,255,0.4);}
   .voice-select{width:100%;padding:11px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;-webkit-appearance:none;cursor:pointer;}
   .voice-select option{background:#0D1628;}
-  .no-memory{display:none;flex-direction:column;align-items:center;gap:12px;padding:28px 20px;text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-card);margin-bottom:20px;}
+  .no-memory{display:none;flex-direction:column;align-items:center;gap:10px;padding:18px 16px;text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-card);margin-bottom:12px;}
   .no-memory.visible{display:flex;}
   .no-memory-text{font-size:14px;color:var(--text-secondary);line-height:1.6;max-width:260px;}
   .agotado{text-align:center;padding:16px;font-size:13px;color:rgba(255,255,255,0.35);font-style:italic;display:none;}
   .agotado.visible{display:block;}
-  .hablando-chip{display:none;align-items:center;gap:8px;padding:8px 16px;background:rgba(255,183,71,0.1);border:1px solid rgba(255,183,71,0.3);border-radius:var(--radius-pill);font-family:var(--font-display);font-size:12px;font-weight:700;color:#FFB347;margin-bottom:12px;}
+  .hablando-chip{display:none;align-items:center;gap:8px;padding:7px 14px;background:rgba(255,183,71,0.1);border:1px solid rgba(255,183,71,0.3);border-radius:var(--radius-pill);font-family:var(--font-display);font-size:12px;font-weight:700;color:#FFB347;margin-bottom:10px;}
   .hablando-chip.visible{display:flex;}
   .hablando-dot{width:6px;height:6px;border-radius:50%;background:#FFB347;animation:pulse-dot 1.5s ease-in-out infinite;}
   @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  @media (max-height:700px){
+    .screen{padding-top:12px;}
+    .desc-card{margin-bottom:10px;}
+    .voice-section{margin-top:4px;}
+    .result-text{line-height:1.55;}
+  }
 </style>
 </head>
 <body>
@@ -124,11 +131,11 @@
       <div class="result-icon">⚡</div>
       <div class="result-title turak">TURAK</div>
     </div>
-    <div class="result-text" id="text-turak"></div>
     <button type="button" class="escuchar-grande turak" id="escuchar-turak" onclick="toggleSpeech('turak')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
       <span id="escuchar-label-turak">Escuchar a Turak</span>
     </button>
+    <div class="result-text" id="text-turak"></div>
   </div>
 
   <div class="result-card cirak" id="result-cirak">
@@ -136,11 +143,11 @@
       <div class="result-icon">🌙</div>
       <div class="result-title cirak">CIRAK</div>
     </div>
-    <div class="result-text" id="text-cirak"></div>
     <button type="button" class="escuchar-grande cirak" id="escuchar-cirak" onclick="toggleSpeech('cirak')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
       <span id="escuchar-label-cirak">Escuchar a Cirak</span>
     </button>
+    <div class="result-text" id="text-cirak"></div>
   </div>
 
   <div class="hablando-chip" id="hablando-chip">
