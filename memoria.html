@@ -30,6 +30,9 @@
   .person-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-pill);border:1px solid rgba(255,255,255,0.15);background:transparent;font-family:var(--font-display);font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
   .person-chip.active{border-color:rgba(0,212,255,0.5);color:var(--cyan);background:rgba(0,212,255,0.1);}
   .person-chip.unknown-chip.active{border-color:rgba(200,159,255,0.5);color:#C89FFF;background:rgba(200,159,255,0.1);}
+  .person-chip.plus-chip{font-size:14px;padding:4px 12px;color:#FFB347;border-color:rgba(255,183,71,0.25);}
+  .assign-status{font-size:11px;color:rgba(255,255,255,0.45);padding:2px 0 0;line-height:1.4;}
+  .assign-status span{color:var(--cyan);font-weight:700;}
   .clear-btn{padding:9px 14px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text-secondary);font-family:var(--font-display);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
   .result-count{font-size:11px;color:var(--text-muted);padding:8px 0 0;}
   .result-count span{color:var(--cyan);font-weight:700;}
@@ -38,8 +41,9 @@
   .day-block{margin-bottom:4px;}
   .day-label{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.12em;text-transform:uppercase;padding:16px 0 8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:10px;}
   .memory-line{display:flex;gap:10px;padding:6px 0;align-items:baseline;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .memory-line:active{background:rgba(255,255,255,0.025);}
   .line-time{font-family:var(--font-display);font-size:10px;color:rgba(255,255,255,0.4);flex-shrink:0;min-width:38px;padding-top:2px;}
-  .line-speaker{font-family:var(--font-display);font-size:12px;font-weight:700;flex-shrink:0;min-width:60px;}
+  .line-speaker{font-family:var(--font-display);font-size:12px;font-weight:700;flex-shrink:0;min-width:60px;cursor:pointer;text-decoration:underline dotted rgba(255,255,255,0.18);text-underline-offset:3px;}
   .line-speaker.sp-t{color:var(--cyan);}
   .line-speaker.sp-u{color:#C89FFF;}
   .line-speaker.sp-i{color:#FFB347;}
@@ -65,6 +69,7 @@
         <button type="button" class="clear-btn" id="btn-clear" onclick="limpiarFiltros()">Limpiar</button>
       </div>
       <div class="person-filter-wrap" id="person-filter-wrap"></div>
+      <div class="assign-status" id="assign-status">Tocá una persona del carrusel para asignar frases</div>
     </div>
     <div class="result-count" id="result-count"></div>
   </div>
@@ -77,21 +82,38 @@
   </div>
 </div>
 <script>
-const VISTOP=window.parent?.VISTOP||{get:()=>[]};
-let todaLaMemoria=[], filtroPersona=null;
+const VISTOP=window.parent?.VISTOP||{
+  get:function(){return [];},
+  save:function(){},
+  append:function(){}
+};
+
+let todaLaMemoria=[];
+let personaActiva=null;
 
 const MEM_T={
-  es:{title:'Memoria',desde:'Desde',hasta:'Hasta',search:'Buscar en memoria...',clear:'Limpiar',empty_title:'Sin registros aún',empty_body:'Las transcripciones aparecerán acá automáticamente.',today:'Hoy',yesterday:'Ayer',records:'registro',records_pl:'registros',todos:'Todos'},
-  en:{title:'Memory',desde:'From',hasta:'To',search:'Search memory...',clear:'Clear',empty_title:'No records yet',empty_body:'Transcriptions will appear here automatically.',today:'Today',yesterday:'Yesterday',records:'record',records_pl:'records',todos:'All'},
-  pt:{title:'Memória',desde:'De',hasta:'Até',search:'Buscar na memória...',clear:'Limpar',empty_title:'Sem registros ainda',empty_body:'As transcrições aparecerão aqui automaticamente.',today:'Hoje',yesterday:'Ontem',records:'registro',records_pl:'registros',todos:'Todos'},
-  fr:{title:'Mémoire',desde:'De',hasta:'À',search:'Rechercher...',clear:'Effacer',empty_title:'Pas encore de données',empty_body:'Les transcriptions apparaîtront ici automatiquement.',today:"Aujourd'hui",yesterday:'Hier',records:'entrée',records_pl:'entrées',todos:'Tous'},
-  de:{title:'Speicher',desde:'Von',hasta:'Bis',search:'Suchen...',clear:'Löschen',empty_title:'Noch keine Aufzeichnungen',empty_body:'Transkriptionen erscheinen hier automatisch.',today:'Heute',yesterday:'Gestern',records:'Eintrag',records_pl:'Einträge',todos:'Alle'},
-  it:{title:'Memoria',desde:'Da',hasta:'A',search:'Cerca...',clear:'Cancella',empty_title:'Nessun record ancora',empty_body:'Le trascrizioni appariranno qui automaticamente.',today:'Oggi',yesterday:'Ieri',records:'record',records_pl:'record',todos:'Tutti'},
-  ru:{title:'Память',desde:'С',hasta:'До',search:'Поиск...',clear:'Очистить',empty_title:'Записей пока нет',empty_body:'Транскрипции появятся здесь автоматически.',today:'Сегодня',yesterday:'Вчера',records:'запись',records_pl:'записей',todos:'Все'},
+  es:{title:'Memoria',desde:'Desde',hasta:'Hasta',search:'Buscar en memoria...',clear:'Limpiar',empty_title:'Sin registros aún',empty_body:'Las transcripciones aparecerán acá automáticamente.',today:'Hoy',yesterday:'Ayer',records:'registro',records_pl:'registros',todos:'Todos',asignando:'Asignando a',sin_asignar:'Tocá una persona del carrusel para asignar frases',nuevo:'Nuevo'},
+  en:{title:'Memory',desde:'From',hasta:'To',search:'Search memory...',clear:'Clear',empty_title:'No records yet',empty_body:'Transcriptions will appear here automatically.',today:'Today',yesterday:'Yesterday',records:'record',records_pl:'records',todos:'All',asignando:'Assigning to',sin_asignar:'Tap a person in the carousel to assign lines',nuevo:'New'},
+  pt:{title:'Memória',desde:'De',hasta:'Até',search:'Buscar na memória...',clear:'Limpar',empty_title:'Sem registros ainda',empty_body:'As transcrições aparecerão aqui automaticamente.',today:'Hoje',yesterday:'Ontem',records:'registro',records_pl:'registros',todos:'Todos',asignando:'Atribuindo a',sin_asignar:'Toque em uma pessoa no carrossel para atribuir frases',nuevo:'Novo'},
+  fr:{title:'Mémoire',desde:'De',hasta:'À',search:'Rechercher...',clear:'Effacer',empty_title:'Pas encore de données',empty_body:'Les transcriptions apparaîtront ici automatiquement.',today:"Aujourd'hui",yesterday:'Hier',records:'entrée',records_pl:'entrées',todos:'Tous',asignando:'Attribution à',sin_asignar:'Touchez une personne du carrousel pour attribuer des lignes',nuevo:'Nouveau'},
+  de:{title:'Speicher',desde:'Von',hasta:'Bis',search:'Suchen...',clear:'Löschen',empty_title:'Noch keine Aufzeichnungen',empty_body:'Transkriptionen erscheinen hier automatisch.',today:'Heute',yesterday:'Gestern',records:'Eintrag',records_pl:'Einträge',todos:'Alle',asignando:'Zuordnung zu',sin_asignar:'Tippen Sie auf eine Person im Karussell, um Zeilen zuzuordnen',nuevo:'Neu'},
+  it:{title:'Memoria',desde:'Da',hasta:'A',search:'Cerca...',clear:'Cancella',empty_title:'Nessun record ancora',empty_body:'Le trascrizioni appariranno qui automaticamente.',today:'Oggi',yesterday:'Ieri',records:'record',records_pl:'record',todos:'Tutti',asignando:'Assegnando a',sin_asignar:'Tocca una persona nel carosello per assegnare frasi',nuevo:'Nuovo'},
+  ru:{title:'Память',desde:'С',hasta:'До',search:'Поиск...',clear:'Очистить',empty_title:'Записей пока нет',empty_body:'Транскрипции появятся здесь автоматически.',today:'Сегодня',yesterday:'Вчера',records:'запись',records_pl:'записей',todos:'Все',asignando:'Назначается',sin_asignar:'Нажмите на человека в карусели, чтобы назначать строки',nuevo:'Новый'},
 };
 
 function getLang(){const t=VISTOP.get('titular',{})||{},i=(t&&t.idioma)?t.idioma:'es-AR';if(i.startsWith('en'))return 'en';if(i.startsWith('pt'))return 'pt';if(i.startsWith('fr'))return 'fr';if(i.startsWith('de'))return 'de';if(i.startsWith('it'))return 'it';if(i.startsWith('ru'))return 'ru';return 'es';}
-function getTitularName(){const t=VISTOP.get('titular',{});return t?.nombre?t.nombre.split(' ')[0]:'Titular';}
+
+function getTitularName(){
+  const t=VISTOP.get('titular',{})||{};
+  let nombre=(t.titularNombre||t.nombre||t.name||VISTOP.get('titular_nombre','')||'').toString().trim();
+  if(!nombre){
+    try{
+      const raw=localStorage.getItem('vistop_titular')||localStorage.getItem('vistop_usuario')||localStorage.getItem('vistop_user');
+      if(raw){const obj=JSON.parse(raw);nombre=(obj.titularNombre||obj.nombre||obj.name||'').toString().trim();}
+    }catch(e){}
+  }
+  return nombre?nombre.split(' ')[0]:'Titular';
+}
 
 function applyLang(){
   const t=MEM_T[getLang()];
@@ -102,16 +124,89 @@ function applyLang(){
   document.getElementById('btn-clear').textContent=t.clear;
   document.getElementById('empty-title').textContent=t.empty_title;
   document.getElementById('empty-body').textContent=t.empty_body;
+  actualizarEstadoAsignacion();
 }
 
-function init(){applyLang();todaLaMemoria=VISTOP.get('memoria',[])||[];renderPersonFilter();aplicarFiltros();}
+function init(){
+  applyLang();
+  todaLaMemoria=VISTOP.get('memoria',[])||[];
+
+  let cambio=false;
+  todaLaMemoria.forEach(function(e){
+    if(!e.id){
+      e.id='mem_'+(e.ts||Date.now())+'_'+Math.random().toString(36).slice(2,6);
+      cambio=true;
+    }
+    if(!e.speaker){
+      e.speaker='?';
+      cambio=true;
+    }
+  });
+
+  if(cambio){
+    VISTOP.save('memoria',todaLaMemoria);
+  }
+
+  renderPersonFilter();
+  aplicarFiltros();
+}
 
 function renderPersonFilter(){
   const t=MEM_T[getLang()],wrap=document.getElementById('person-filter-wrap');
   wrap.innerHTML='';
-  const todosChip=document.createElement('div');todosChip.className='person-chip'+(filtroPersona===null?' active':'');todosChip.textContent=t.todos;todosChip.onclick=()=>{filtroPersona=null;renderPersonFilter();aplicarFiltros();};wrap.appendChild(todosChip);
-  const speakers=[...new Set(todaLaMemoria.map(e=>e.speaker))].filter(Boolean);
-  speakers.forEach(sp=>{const chip=document.createElement('div');const isU=sp==='?';chip.className='person-chip'+(isU?' unknown-chip':'')+(filtroPersona===sp?' active':'');chip.textContent=isU?'?':sp;chip.onclick=()=>{filtroPersona=sp;renderPersonFilter();aplicarFiltros();};wrap.appendChild(chip);});
+
+  function crearChip(nombre, valor, claseExtra){
+    const chip=document.createElement('div');
+    chip.className='person-chip '+(claseExtra||'')+(personaActiva===valor?' active':'');
+    chip.textContent=nombre;
+    chip.onclick=function(){
+      personaActiva=valor;
+      renderPersonFilter();
+      actualizarEstadoAsignacion();
+    };
+    wrap.appendChild(chip);
+  }
+
+  crearChip(t.todos,null,'');
+
+  const titular=getTitularName();
+  crearChip(titular,titular,'');
+  crearChip('?','?','unknown-chip');
+
+  const inters=VISTOP.get('interlocutores',[])||[];
+  const nombresMemoria=[...new Set(todaLaMemoria.map(function(e){return e.speaker;}))]
+    .filter(function(sp){return sp && sp!=='?' && sp!==titular && sp!=='Titular';});
+
+  const nombres={};
+
+  inters.forEach(function(p){
+    if(p&&p.nombre)nombres[p.nombre]=true;
+  });
+
+  nombresMemoria.forEach(function(n){
+    nombres[n]=true;
+  });
+
+  Object.keys(nombres).sort().forEach(function(nombre){
+    crearChip(nombre,nombre,'');
+  });
+
+  const plus=document.createElement('div');
+  plus.className='person-chip plus-chip';
+  plus.textContent='+';
+  plus.onclick=function(){crearNuevaPersona();};
+  wrap.appendChild(plus);
+}
+
+function actualizarEstadoAsignacion(){
+  const t=MEM_T[getLang()];
+  const status=document.getElementById('assign-status');
+  if(!status)return;
+  if(personaActiva){
+    status.innerHTML=t.asignando+': <span>'+personaActiva+'</span>. Tocá el nombre de la línea que quieras cambiar.';
+  }else{
+    status.textContent=t.sin_asignar;
+  }
 }
 
 function aplicarFiltros(){
@@ -119,12 +214,19 @@ function aplicarFiltros(){
   let f=[...todaLaMemoria];
   if(desde) f=f.filter(e=>e.ts>=new Date(desde).getTime());
   if(hasta) f=f.filter(e=>e.ts<=new Date(hasta).getTime());
-  if(texto) f=f.filter(e=>e.text.toLowerCase().includes(texto));
-  if(filtroPersona!==null) f=f.filter(e=>e.speaker===filtroPersona);
+  if(texto) f=f.filter(e=>String(e.text||'').toLowerCase().includes(texto));
   renderMemoria(f,texto);
 }
 
-function limpiarFiltros(){document.getElementById('filter-desde').value='';document.getElementById('filter-hasta').value='';document.getElementById('filter-texto').value='';filtroPersona=null;renderPersonFilter();aplicarFiltros();}
+function limpiarFiltros(){
+  document.getElementById('filter-desde').value='';
+  document.getElementById('filter-hasta').value='';
+  document.getElementById('filter-texto').value='';
+  personaActiva=null;
+  renderPersonFilter();
+  actualizarEstadoAsignacion();
+  aplicarFiltros();
+}
 
 function renderMemoria(entries,highlight){
   const list=document.getElementById('memory-list'),empty=document.getElementById('empty-state'),count=document.getElementById('result-count'),t=MEM_T[getLang()];
@@ -143,14 +245,99 @@ function renderMemoria(entries,highlight){
 }
 
 function buildLine(entry,highlight){
-  const line=document.createElement('div');line.className='memory-line';
+  const line=document.createElement('div');
+  line.className='memory-line';
+  line.dataset.id=entry.id;
+
   const time=new Date(entry.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   const tit=getTitularName();
-  let spClass='sp-t'; if(entry.speaker==='?')spClass='sp-u'; else if(entry.speaker!==tit&&entry.speaker!=='Titular')spClass='sp-i';
-  let tx=entry.text;
-  if(highlight){const rg=new RegExp(`(${escapeRegex(highlight)})`,'gi');tx=tx.replace(rg,'<mark>$1</mark>');}
-  line.innerHTML=`<span class="line-time">${time}</span><span class="line-speaker ${spClass}">${entry.speaker}:</span><span class="line-text">${tx}</span>`;
+
+  let spClass='sp-t';
+  if(entry.speaker==='?')spClass='sp-u';
+  else if(entry.speaker!==tit&&entry.speaker!=='Titular')spClass='sp-i';
+
+  let tx=String(entry.text||'');
+  if(highlight){
+    const rg=new RegExp(`(${escapeRegex(highlight)})`,'gi');
+    tx=tx.replace(rg,'<mark>$1</mark>');
+  }
+
+  const timeEl=document.createElement('span');
+  timeEl.className='line-time';
+  timeEl.textContent=time;
+
+  const speakerEl=document.createElement('span');
+  speakerEl.className='line-speaker '+spClass;
+  speakerEl.textContent=(entry.speaker||'?')+':';
+  speakerEl.onclick=function(){asignarPersonaALinea(entry.id);};
+
+  const textEl=document.createElement('span');
+  textEl.className='line-text';
+  textEl.innerHTML=tx;
+
+  line.appendChild(timeEl);
+  line.appendChild(speakerEl);
+  line.appendChild(textEl);
+
   return line;
+}
+
+function asignarPersonaALinea(id){
+  if(!personaActiva){
+    return;
+  }
+
+  todaLaMemoria=todaLaMemoria.map(function(e){
+    if(e.id===id){
+      e.speaker=personaActiva;
+      e.speakerUpdatedAt=Date.now();
+      e.speakerManual=true;
+    }
+    return e;
+  });
+
+  guardarInterlocutorSiHaceFalta(personaActiva);
+  VISTOP.save('memoria',todaLaMemoria);
+
+  renderPersonFilter();
+  aplicarFiltros();
+}
+
+function guardarInterlocutorSiHaceFalta(nombre){
+  if(!nombre || nombre==='?' || nombre===getTitularName() || nombre==='Titular'){
+    return;
+  }
+
+  var inters=VISTOP.get('interlocutores',[])||[];
+  var existe=inters.some(function(p){
+    return p.nombre && p.nombre.toLowerCase()===nombre.toLowerCase();
+  });
+
+  if(!existe){
+    inters.push({
+      id:Date.now().toString(),
+      nombre:nombre,
+      rol:'',
+      tipo:'frecuente',
+      creado:Date.now(),
+      origen:'memoria_manual'
+    });
+    VISTOP.save('interlocutores',inters);
+  }
+}
+
+function crearNuevaPersona(){
+  var nombre=prompt('Nombre de la persona:');
+  if(!nombre)return;
+
+  nombre=nombre.trim();
+  if(!nombre)return;
+
+  guardarInterlocutorSiHaceFalta(nombre);
+  personaActiva=nombre;
+
+  renderPersonFilter();
+  actualizarEstadoAsignacion();
 }
 
 function formatDayLabel(dayKey){
@@ -164,9 +351,27 @@ function escapeRegex(str){return str.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
 window.addEventListener('message',function(event){
   const{type,text,isFinal,timestamp,speaker}=event.data||{};
-  if(type==='VISTOP_TRANSCRIPT'&&isFinal&&text){todaLaMemoria.push({speaker:speaker||'Titular',text,ts:timestamp||Date.now()});renderPersonFilter();aplicarFiltros();}
-  if(type==='VISTOP_LANG_CHANGE'){applyLang();renderPersonFilter();aplicarFiltros();}
-  if(type==='VISTOP_SPEAKER_IDENTIFIED'){todaLaMemoria=VISTOP.get('memoria',[])||[];renderPersonFilter();aplicarFiltros();}
+  if(type==='VISTOP_TRANSCRIPT'&&isFinal&&text){
+    todaLaMemoria.push({
+      id:'mem_'+(timestamp||Date.now())+'_'+Math.random().toString(36).slice(2,6),
+      speaker:speaker||'?',
+      text:text,
+      ts:timestamp||Date.now()
+    });
+    VISTOP.save('memoria',todaLaMemoria);
+    renderPersonFilter();
+    aplicarFiltros();
+  }
+  if(type==='VISTOP_LANG_CHANGE'){
+    applyLang();
+    renderPersonFilter();
+    aplicarFiltros();
+  }
+  if(type==='VISTOP_SPEAKER_IDENTIFIED'){
+    todaLaMemoria=VISTOP.get('memoria',[])||[];
+    renderPersonFilter();
+    aplicarFiltros();
+  }
 });
 
 init();
