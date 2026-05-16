@@ -20,7 +20,6 @@
   .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.45;pointer-events:none;}
   .search-input{width:100%;padding:11px 12px 11px 36px;background:var(--bg-input);border:1px solid var(--border);border-radius:14px;color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;}
   .search-input:focus{border-color:var(--border-focus);}
-  .clear-search{padding:11px 14px;border-radius:14px;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text-secondary);font-family:var(--font-display);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
   .category{margin-bottom:28px;}
   .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
   .cat-badge{display:inline-flex;align-items:center;padding:5px 14px;border-radius:var(--radius-pill);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
@@ -96,7 +95,6 @@
       <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" class="search-input" id="search-personas" oninput="renderAll()" placeholder="Buscar persona...">
     </div>
-    <button type="button" class="clear-search" id="btn-clear-search" onclick="limpiarBusqueda()">Limpiar</button>
   </div>
 
   <div id="content"></div>
@@ -164,7 +162,6 @@ function applyLang(){
   document.getElementById('modal-nombre').placeholder=t.name_ph;
   document.getElementById('modal-rol').placeholder=t.role_ph;
   document.getElementById('search-personas').placeholder=t.search_ph;
-  document.getElementById('btn-clear-search').textContent=t.clear;
 }
 
 let personas=[];
@@ -210,7 +207,6 @@ function filtrarPersonas(lista){
     return String(p.nombre||'').toLowerCase().includes(q) || String(p.rol||'').toLowerCase().includes(q) || String(p.tipo||'').toLowerCase().includes(q);
   });
 }
-function limpiarBusqueda(){document.getElementById('search-personas').value='';renderAll();}
 
 function renderAll(){
   const t=INT_T[getLang()],content=document.getElementById('content');
