@@ -258,15 +258,9 @@ var AppState={
   isSpeaking:false,
   currentSpeaker:'unknown',
   voiceIdentityReady:false,
-  lastVoiceMatchTitular:false,
-  voiceAutoSpeaker:null,
-  voiceAutoConfidence:0,
-  voiceAutoSource:null,
-  voiceAutoAt:null,
-  voiceModelVersion:null
+  lastVoiceMatchTitular:false
 };
 window.AppState=AppState;
-
 function getTitularName(){
   var t=VISTOP.get('titular',{}) || {};
   var nombre = (t.titularNombre || t.nombre || t.name || VISTOP.get('titular_nombre','') || '').toString().trim();
@@ -287,129 +281,80 @@ function getTitularName(){
 function puedeIdentificarTitularPorVoz(){
   var estado=VISTOP.get('calibracion_estado','');
   var modelo=VISTOP.get('titular_voice_model',null) || VISTOP.get('calibracion_ia_modelo',null);
+
+  /*
+    La calibración nueva guarda audio real como "audio_grabado".
+    Eso todavía NO alcanza para identificar automáticamente al titular.
+    Solo cuando conectemos una IA/servicio de comparación de voz,
+    el estado pasará a "ia_lista" y habrá un modelo disponible.
+  */
   return estado==='ia_lista' && !!modelo;
 }
 
 function resolverSpeakerTranscripcion(){
-  if(
-    AppState.voiceIdentityReady === true &&
-    AppState.voiceAutoSpeaker &&
-    AppState.voiceAutoConfidence >= 0.85
-  ){
-    return AppState.voiceAutoSpeaker;
+  /*
+    Regla actual, sin IA de voz automática todavía:
+    - Si el usuario eligió el titular, cada frase queda con el nombre del titular logueado.
+    - Si eligió "otro/no identificado", queda como "?" para poder identificarlo después.
+    - Si ya se nombró un interlocutor, queda con ese nombre.
+    Más adelante, cuando conectemos IA de voz, esta misma función podrá decidir automáticamente.
+  */
+
+  if(AppState.currentSpeaker === 'titular'){
+    return getTitularName();
   }
-  return '?';
-}
 
-function crearEntradaMemoria(texto,speaker,ts,extra){
-  var ahora=ts||Date.now();
-  var reconocidoAutomaticamente=!!(extra&&extra.voiceAutoRecognized);
-  var confidence=(extra&&typeof extra.voiceMatchConfidence==='number')?extra.voiceMatchConfidence:null;
-
-  return {
-    id:'mem_'+ahora+'_'+Math.random().toString(36).slice(2,6),
-    speaker:speaker||'?',
-    text:texto,
-    ts:ahora,
-    audioSnippetId:(extra&&extra.audioSnippetId)||null,
-    audioBase64:(extra&&extra.audioBase64)||null,
-    audioStoragePath:(extra&&extra.audioStoragePath)||null,
-    voiceStatus:reconocidoAutomaticamente?'auto_recognized':'pending_audio',
-    voiceConfirmed:false,
-    voiceTrainingCandidate:false,
-    voiceAutoRecognized:reconocidoAutomaticamente,
-    voiceMatchConfidence:confidence,
-    voiceModelVersion:(extra&&extra.voiceModelVersion)||null,
-    speakerSource:reconocidoAutomaticamente?'voice_ai':'unknown',
-    speakerManual:false
-  };
-}
-
-function datosVozActual(){
-  if(
-    AppState.voiceIdentityReady === true &&
-    AppState.voiceAutoSpeaker &&
-    AppState.voiceAutoConfidence >= 0.85
-  ){
-    return {
-      voiceAutoRecognized:true,
-      voiceMatchConfidence:AppState.voiceAutoConfidence,
-      voiceModelVersion:AppState.voiceModelVersion||null
-    };
+  if(AppState.lastVoiceMatchTitular === true){
+    return getTitularName();
   }
-  return {
-    voiceAutoRecognized:false,
-    voiceMatchConfidence:null,
-    voiceModelVersion:null
-  };
+
+  if(!AppState.currentSpeaker || AppState.currentSpeaker === 'unknown'){
+    return '?';
+  }
+
+  return AppState.currentSpeaker;
 }
 
 function updateStepIndicators(){var titular=VISTOP.get('titular',{})||{},calibrado=VISTOP.get('calibrado',false);var ok=!!(titular.nombre&&titular.nombre.trim().length>0);var dotT=document.getElementById('dot-titular'),dotC=document.getElementById('dot-calibrar');var btnT=document.querySelector('[data-module="titular.html"]'),btnC=document.querySelector('[data-module="index.html"]');dotT.style.display=ok?'none':'block';ok?btnT.classList.remove('pending'):btnT.classList.add('pending');dotC.style.display=calibrado?'none':'block';calibrado?btnC.classList.remove('pending'):btnC.classList.add('pending');}
 
-/* ══ MOTOR DE VOZ — APP.HTML ES EL ÚNICO QUE GUARDA MEMORIA ══ */
+/* ══ MOTOR DE VOZ — ANTI DUPLICADO DEFINITIVO ══ */
+var textoMasLargo = '';
+var speakerMasLargo = '';
 var SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-function normalizarTexto(t){
-  return (t||'').toString().toLowerCase().trim().replace(/\s+/g,' ');
-}
-
 function guardarEnMemoria(texto, speaker) {
-  if(!texto || texto.trim().length < 2) return;
-
+  if(!texto || texto.length < 2) return;
   var memoria = VISTOP.get('memoria', []) || [];
   var ahora = Date.now();
-  var speakerSeguro = speaker || '?';
-  var extraVoz = datosVozActual();
-  var t1 = normalizarTexto(texto);
+  /* Comparar con los últimos 5 registros en los últimos 15 segundos */
   var esRepetido = false;
-
-  for(var i = memoria.length - 1; i >= Math.max(0, memoria.length - 8); i--) {
-    if(!memoria[i] || !memoria[i].ts) continue;
-    if((ahora - memoria[i].ts) > 20000) break;
-
-    var t2 = normalizarTexto(memoria[i].text || '');
-    if(!t2) continue;
-
-    var parecido = (t1 === t2 || t1.indexOf(t2) !== -1 || t2.indexOf(t1) !== -1);
-
-    if(parecido) {
-      if(t1.length >= t2.length) {
+  var t1 = texto.toLowerCase().trim();
+  for(var i = memoria.length - 1; i >= Math.max(0, memoria.length - 5); i--) {
+    if((ahora - memoria[i].ts) > 15000) break;
+    var t2 = memoria[i].text.toLowerCase().trim();
+    /* Es repetido si son iguales, o uno contiene al otro */
+    if(t1 === t2 || t1.indexOf(t2) !== -1 || t2.indexOf(t1) !== -1) {
+      /* Si el nuevo es más largo, reemplazar el viejo */
+      if(t1.length > t2.length) {
         memoria[i].text = texto;
-        memoria[i].ts = ahora;
-        memoria[i].speaker = memoria[i].speaker || speakerSeguro || '?';
-        if(!memoria[i].id){
-          memoria[i].id='mem_'+ahora+'_'+Math.random().toString(36).slice(2,6);
-        }
-        memoria[i].audioSnippetId = memoria[i].audioSnippetId || null;
-        memoria[i].audioBase64 = memoria[i].audioBase64 || null;
-        memoria[i].audioStoragePath = memoria[i].audioStoragePath || null;
-        memoria[i].voiceStatus = memoria[i].voiceStatus || 'pending_audio';
-        memoria[i].voiceConfirmed = memoria[i].voiceConfirmed || false;
-        memoria[i].voiceTrainingCandidate = memoria[i].voiceTrainingCandidate || false;
-        memoria[i].voiceAutoRecognized = memoria[i].voiceAutoRecognized || false;
-        memoria[i].voiceMatchConfidence = memoria[i].voiceMatchConfidence || null;
-        memoria[i].voiceModelVersion = memoria[i].voiceModelVersion || null;
-        memoria[i].speakerSource = memoria[i].speakerSource || 'unknown';
-        memoria[i].speakerManual = memoria[i].speakerManual || false;
         VISTOP.save('memoria', memoria);
-        avisarCambioMemoria();
+        /* Notificar al frame que hubo un cambio */
+        var frame = document.getElementById('module-frame');
+        if(frame && frame.contentWindow) {
+          try{ frame.contentWindow.postMessage({type:'VISTOP_SPEAKER_IDENTIFIED', speaker:speaker}, '*'); }catch(e){}
+        }
       }
       esRepetido = true;
       break;
     }
   }
-
   if(!esRepetido) {
-    memoria.push(crearEntradaMemoria(texto,speakerSeguro,ahora,extraVoz));
-    VISTOP.save('memoria', memoria);
-    avisarCambioMemoria();
-  }
-}
-
-function avisarCambioMemoria(){
-  var frame=document.getElementById('module-frame');
-  if(frame&&frame.contentWindow){
-    try{frame.contentWindow.postMessage({type:'VISTOP_MEMORY_UPDATED'},'*');}catch(e){}
+    VISTOP.append('memoria', {
+      id: ahora.toString() + Math.random().toString(36).slice(2,6),
+      speaker: speaker,
+      text: texto,
+      ts: ahora
+    });
   }
 }
 
@@ -422,6 +367,8 @@ function initRecognition(){
   r.lang=(VISTOP.get('titular',{})||{}).idioma||'es-AR';
 
   r.onstart=function(){
+    textoMasLargo='';
+    speakerMasLargo='';
     setMicStatus('active',NAV_T[getLang()].escuchando);
   };
 
@@ -434,26 +381,35 @@ function initRecognition(){
       var fin=event.results[i].isFinal;
       if(!tx)continue;
 
+      /* Enviar al frame para mostrar en pantalla */
       var frame=document.getElementById('module-frame');
       if(frame&&frame.contentWindow){
         try{frame.contentWindow.postMessage({type:'VISTOP_TRANSCRIPT',text:tx,isFinal:fin,timestamp:Date.now(),speaker:speaker},'*');}catch(e){}
       }
 
-      if(fin){
-        guardarEnMemoria(tx, speaker || '?');
+      /* Acumular solo el texto final más largo de esta sesión */
+      if(fin && tx.length > textoMasLargo.length){
+        textoMasLargo = tx;
+        speakerMasLargo = speaker;
       }
     }
   };
 
   r.onerror=function(event){
-    if(event.error==='not-allowed'||event.error==='service-not-allowed'){
+    if(event.error==='not-allowed'||event.error==='service-not-allowed')
       setMicStatus('idle',NAV_T[getLang()].inactivo);
-    }
   };
 
   r.onend=function(){
+    /* Guardar al terminar la sesión — con verificación anti-duplicado */
+    if(textoMasLargo && textoMasLargo.length > 1){
+      guardarEnMemoria(textoMasLargo, speakerMasLargo || '?');
+    }
+    textoMasLargo='';
+    speakerMasLargo='';
+
     if(AppState.micStatus==='active'&&!AppState.isSpeaking){
-      setTimeout(function(){try{r.start();}catch(e){}},250);
+      try{r.start();}catch(e){}
     }else if(AppState.micStatus!=='active'){
       setMicStatus('idle',NAV_T[getLang()].inactivo);
     }
@@ -462,14 +418,7 @@ function initRecognition(){
   AppState.recognition=r;
 }
 
-function startListening(){
-  if(!AppState.recognition)initRecognition();
-  if(AppState.micStatus==='active')return;
-  var t=VISTOP.get('titular',{})||{};
-  if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';
-  try{AppState.micStatus='active';AppState.recognition.start();}catch(e){}
-}
-
+function startListening(){if(!AppState.recognition)initRecognition();if(AppState.micStatus==='active')return;var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';try{AppState.micStatus='active';AppState.recognition.start();}catch(e){}}
 function pauseListening(byAnalysis){
   var estabaEscuchando = AppState.micStatus === 'active';
 
@@ -496,7 +445,9 @@ function resumeListeningAfterSpeech(){
 
   if(AppState.listenWasActive){
     AppState.listenWasActive = false;
-    setTimeout(function(){startListening();},800);
+    setTimeout(function(){
+      startListening();
+    },800);
   }else{
     AppState.listenWasActive = false;
     AppState.micStatus = 'idle';
@@ -507,39 +458,7 @@ function toggleMic(){if(AppState.micStatus==='active')pauseListening(false);else
 function setMicStatus(status,label){AppState.micStatus=status;var dot=document.getElementById('mic-dot'),lbl=document.getElementById('mic-label'),chip=document.getElementById('mic-status-chip');dot.className='';chip.className='';if(status==='active'){dot.classList.add('active');chip.classList.add('active');}else if(status==='paused')dot.classList.add('paused');else if(status==='error')dot.classList.add('error');lbl.textContent=label;broadcastMicStatus(status);}
 function broadcastMicStatus(status){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;try{frame.contentWindow.postMessage({type:'VISTOP_MIC_STATUS',status:status},'*');}catch(e){}}
 function sendLangToFrame(){var frame=document.getElementById('module-frame');if(!frame||!frame.contentWindow)return;try{frame.contentWindow.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}}
-
-function identificarHablante(data){
-  if(!data||!data.newSpeaker||!data.memoryId)return;
-
-  var ns=data.newSpeaker;
-  var memoria=VISTOP.get('memoria',[])||[];
-  var changed=false;
-
-  memoria.forEach(function(e){
-    if(e.id===data.memoryId){
-      e.speaker=ns;
-      e.speakerManual=true;
-      e.voiceConfirmed=true;
-      e.voiceTrainingCandidate=true;
-      e.speakerUpdatedAt=Date.now();
-      e.speakerSource='memory_manual';
-      changed=true;
-    }
-  });
-
-  if(changed)VISTOP.save('memoria',memoria);
-
-  var inters=VISTOP.get('interlocutores',[])||[];
-  if(ns!=='?'&&!inters.find(function(p){return p.nombre&&p.nombre.toLowerCase()===ns.toLowerCase();})){
-    inters.push({id:Date.now().toString(),nombre:ns,rol:'',tipo:'frecuente',creado:Date.now(),origen:'memoria_manual'});
-    VISTOP.save('interlocutores',inters);
-  }
-
-  var frame=document.getElementById('module-frame');
-  if(frame&&frame.contentWindow){
-    try{frame.contentWindow.postMessage({type:'VISTOP_SPEAKER_IDENTIFIED',speaker:ns,memoryId:data.memoryId},'*');}catch(e){}
-  }
-}
+function identificarHablante(data){if(!data||!data.newSpeaker)return;var ns=data.newSpeaker,ss=data.sessionStart||0;var memoria=VISTOP.get('memoria',[]);var changed=false;memoria.forEach(function(e){if(e.speaker==='?'&&e.ts>=ss){e.speaker=ns;changed=true;}});if(changed)VISTOP.save('memoria',memoria);var inters=VISTOP.get('interlocutores',[]);if(!inters.find(function(p){return p.nombre.toLowerCase()===ns.toLowerCase();})){inters.push({id:Date.now().toString(),nombre:ns,rol:'',tipo:'frecuente',creado:Date.now()});VISTOP.save('interlocutores',inters);}AppState.currentSpeaker=ns;var frame=document.getElementById('module-frame');if(frame&&frame.contentWindow){try{frame.contentWindow.postMessage({type:'VISTOP_SPEAKER_IDENTIFIED',speaker:ns},'*');}catch(e){}}}
 
 window.addEventListener('message',function(event){
   var msg=event.data||{},type=msg.type,data=msg.data;
@@ -549,22 +468,16 @@ window.addEventListener('message',function(event){
   else if(type==='VISTOP_SPEAKING_START'){AppState.isSpeaking=true;pauseListening(true);}
   else if(type==='VISTOP_SPEAKING_END'){AppState.isSpeaking=false;resumeListeningAfterSpeech();}
   else if(type==='VISTOP_SET_SPEAKER'){
-    if(data&&data.voiceAuto===true&&data.speaker){
-      AppState.voiceIdentityReady=true;
-      AppState.voiceAutoSpeaker=data.speaker;
-      AppState.voiceAutoConfidence=typeof data.confidence==='number'?data.confidence:0;
-      AppState.voiceAutoSource=data.source||'voice_ai';
-      AppState.voiceAutoAt=Date.now();
-      AppState.voiceModelVersion=data.voiceModelVersion||null;
-    }else{
-      AppState.currentSpeaker='unknown';
-      AppState.lastVoiceMatchTitular=false;
-      AppState.voiceAutoSpeaker=null;
-      AppState.voiceAutoConfidence=0;
-      AppState.voiceAutoSource=null;
-      AppState.voiceAutoAt=null;
-      AppState.voiceModelVersion=null;
-    }
+    var sp=(data&&data.speaker)?data.speaker:'unknown';
+
+    /*
+      Selección manual de hablante:
+      si el usuario toca el titular, se usa el nombre del titular logueado.
+      No es identificación automática de voz; es una marca manual que queda activa
+      hasta que el usuario cambie a "otro" o identifique a otra persona.
+    */
+    AppState.currentSpeaker = sp;
+    AppState.lastVoiceMatchTitular = (sp === 'titular');
   }
   else if(type==='VISTOP_IDENTIFY_SPEAKER')identificarHablante(data);
   else if(type==='VISTOP_LANG_CHANGE'){applyNav();updateStepIndicators();sendLangToFrame();var t=VISTOP.get('titular',{})||{};if(AppState.recognition)AppState.recognition.lang=t.idioma||'es-AR';}
@@ -589,6 +502,10 @@ function loadModule(btn){
   frame.onload=function(){sendLangToFrame();};
   frame.src=module;
 
+  /*
+    Nunca volvemos automáticamente a titular.
+    Hasta que la IA esté lista, el modo seguro es desconocido.
+  */
   if(module!=='escucha.html'){
     AppState.currentSpeaker='unknown';
   }
