@@ -354,7 +354,11 @@ function escapeHtml(str){
 window.addEventListener('message',function(event){
   const data=event.data||{};
   const type=data.type;
-  if(type==='VISTOP_TRANSCRIPT'&&data.isFinal&&data.text){
+ if(type==='VISTOP_TRANSCRIPT'&&data.isFinal&&data.text){
+  todaLaMemoria=VISTOP.get('memoria',[])||[];
+  renderPersonFilter();
+  aplicarFiltros();
+}
     todaLaMemoria.push({id:'mem_'+(data.timestamp||Date.now())+'_'+Math.random().toString(36).slice(2,6),speaker:data.speaker||'?',text:data.text,ts:data.timestamp||Date.now()});
     VISTOP.save('memoria',todaLaMemoria);
     renderPersonFilter();
