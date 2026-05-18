@@ -166,6 +166,7 @@
     </button>
   </div>
 
+  <!-- SEGURIDAD — solo Configurar/Cambiar, sin Eliminar -->
   <div class="section">
     <div class="section-label" id="sec-security">Seguridad</div>
     <div class="security-box">
@@ -184,6 +185,7 @@
 
 <div id="toast"></div>
 
+<!-- MODAL PIN -->
 <div class="pin-overlay" id="pin-overlay">
   <div class="pin-modal">
     <div class="pin-handle"></div>
@@ -241,62 +243,12 @@ var VISTOP_LOCAL = {
 var VISTOP = VISTOP_LOCAL;
 try{ if(window.parent&&window.parent.VISTOP&&typeof window.parent.VISTOP.get==='function'){VISTOP=window.parent.VISTOP;if(!VISTOP.remove)VISTOP.remove=VISTOP_LOCAL.remove;} }catch(e){}
 
-function hashStr(str) { return str; }
-
-function crearUserId(){
-  return 'vistop_user_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+/* ══ HASH SIMPLE — igual que app.html ══ */
+function hashStr(str) {
+  return str;
 }
 
-function obtenerUserIdActual(){
-  var id = '';
-  try{ id = localStorage.getItem('vistop_user_id') || ''; }catch(e){}
-  if(!id){
-    try{
-      var raw = localStorage.getItem('vistop_titular');
-      if(raw){
-        var t = JSON.parse(raw);
-        id = t.userId || t.uid || '';
-      }
-    }catch(e){}
-  }
-  if(!id){
-    try{
-      var parentId = VISTOP.get('device_user_id','') || VISTOP.get('user_id','') || '';
-      id = parentId;
-    }catch(e){}
-  }
-  if(!id) id = crearUserId();
-  try{ localStorage.setItem('vistop_user_id', id); }catch(e){}
-  try{ VISTOP.save('device_user_id', id); VISTOP.save('user_id', id); }catch(e){}
-  return id;
-}
-
-function datosTitularNormalizados(base){
-  base = base || {};
-  var nombre = (base.nombre || '').trim();
-  var mail = (base.mail || base.email || '').trim();
-  var userId = base.userId || obtenerUserIdActual();
-  var ahora = Date.now();
-  return {
-    userId: userId,
-    uid: userId,
-    nombre: nombre,
-    titularNombre: nombre,
-    mail: mail,
-    email: mail,
-    titularEmail: mail,
-    fecha_nacimiento: base.fecha_nacimiento || '',
-    fechaNacimiento: base.fecha_nacimiento || '',
-    idioma: base.idioma || 'es-AR',
-    religion: base.religion || '',
-    objetivos: base.objetivos || [],
-    metas: base.metas || [],
-    perfilCreado: true,
-    perfilActualizadoAt: ahora,
-    requiereCalibracionVoz: true
-  };
-}
-
+/* ══ TRADUCCIONES ══ */
 var T = {
   es:{ title:'Titular', save:'Guardar', lang_label:'🌐 Idioma de la app', welcome_title:'Bienvenido a VISTOP', welcome_body:'Elegí tu idioma y completá tu perfil para comenzar.', step:'Paso 1 de 3', name_ph:'Tu nombre', profile_ph:'Completá tu perfil', nombre_ph:'Tu nombre completo', mail_ph:'tu@mail.com', sec_personal:'Datos personales', sec_spirit:'Espiritualidad', lbl_nombre:'Nombre completo', lbl_mail:'Mail principal', lbl_fecha:'Fecha de nacimiento', lbl_religion:'Religión / espiritualidad (opcional)', sec_obj:'Objetivos', sec_metas:'Metas', add_obj:'Agregar objetivo', add_meta:'Agregar meta', obj_ph:'Escribí un objetivo...', meta_ph:'Escribí una meta...', saved:'Perfil guardado ✓', sec_security:'Seguridad', pin_titulo:'PIN de acceso', pin_sub:'Protegé tu app con un PIN de 6 dígitos', pin_activo:'ACTIVO', btn_config:'Configurar PIN', btn_cambiar:'Cambiar PIN', pin_modal_titulo:'Nuevo PIN', paso1:'Paso 1 de 3 — Ingresá tu nuevo PIN', paso2:'Paso 2 de 3 — Confirmá tu PIN', paso3:'Paso 3 de 3 — Pregunta de recuperación', no_coincide:'Los PINs no coinciden. Intentá de nuevo.', sq_etiqueta:'Pregunta de seguridad — si olvidás el PIN la usás para recuperar el acceso', sq_ph:'Tu respuesta...', btn_guardar_pin:'Guardar PIN', pin_guardado:'🔒 PIN configurado ✓', sin_pregunta:'Elegí una pregunta de seguridad.', sin_respuesta:'Ingresá tu respuesta.', cancelar:'Cancelar', rel:{none:'Sin especificar',cristiano:'Cristiano / Católico',evangelico:'Evangélico / Protestante',judio:'Judío',musulman:'Musulmán',budista:'Budista',hinduista:'Hinduista',espiritualidad:'Espiritualidad propia',agnostico:'Agnóstico',ateo:'Ateo'} },
   en:{ title:'Profile', save:'Save', lang_label:'🌐 App language', welcome_title:'Welcome to VISTOP', welcome_body:'Choose your language and complete your profile to get started.', step:'Step 1 of 3', name_ph:'Your name', profile_ph:'Complete your profile', nombre_ph:'Your full name', mail_ph:'your@email.com', sec_personal:'Personal info', sec_spirit:'Spirituality', lbl_nombre:'Full name', lbl_mail:'Main email', lbl_fecha:'Date of birth', lbl_religion:'Religion / spirituality (optional)', sec_obj:'Objectives', sec_metas:'Goals', add_obj:'Add objective', add_meta:'Add goal', obj_ph:'Write an objective...', meta_ph:'Write a goal...', saved:'Profile saved ✓', sec_security:'Security', pin_titulo:'Access PIN', pin_sub:'Protect your app with a 6-digit PIN', pin_activo:'ACTIVE', btn_config:'Set PIN', btn_cambiar:'Change PIN', pin_modal_titulo:'New PIN', paso1:'Step 1 of 3 — Enter your new PIN', paso2:'Step 2 of 3 — Confirm your PIN', paso3:'Step 3 of 3 — Recovery question', no_coincide:'PINs do not match. Try again.', sq_etiqueta:'Security question — use it to recover access if you forget your PIN', sq_ph:'Your answer...', btn_guardar_pin:'Save PIN', pin_guardado:'🔒 PIN set ✓', sin_pregunta:'Choose a security question.', sin_respuesta:'Enter your answer.', cancelar:'Cancel', rel:{none:'Not specified',cristiano:'Christian / Catholic',evangelico:'Evangelical / Protestant',judio:'Jewish',musulman:'Muslim',budista:'Buddhist',hinduista:'Hindu',espiritualidad:'Own spirituality',agnostico:'Agnostic',ateo:'Atheist'} },
@@ -350,35 +302,19 @@ function applyLang(){
   var mi=document.querySelectorAll('#metas-list .item-input');for(var j=0;j<mi.length;j++)mi[j].placeholder=t.meta_ph;
 }
 
-function onIdiomaChange(){var idioma=document.getElementById('idioma').value;try{var raw=localStorage.getItem('vistop_titular');var obj=raw?JSON.parse(raw):{};obj.idioma=idioma;obj=datosTitularNormalizados(obj);localStorage.setItem('vistop_titular',JSON.stringify(obj));localStorage.setItem('vistop_usuario',JSON.stringify(obj));}catch(e){}try{var s=VISTOP.get('titular',{})||{};s.idioma=idioma;s=datosTitularNormalizados(s);VISTOP.save('titular',s);VISTOP.save('usuario',s);VISTOP.save('user',s);}catch(e){}applyLang();setTimeout(function(){applyLang();},50);try{window.parent.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}}
+function onIdiomaChange(){var idioma=document.getElementById('idioma').value;try{var raw=localStorage.getItem('vistop_titular');var obj=raw?JSON.parse(raw):{};obj.idioma=idioma;localStorage.setItem('vistop_titular',JSON.stringify(obj));}catch(e){}try{var s=VISTOP.get('titular',{})||{};s.idioma=idioma;VISTOP.save('titular',s);}catch(e){}applyLang();setTimeout(function(){applyLang();},50);try{window.parent.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}}
 
 var SIGNOS=[{nombre:'Capricornio',symbol:'♑',desde:[12,22],hasta:[1,19]},{nombre:'Acuario',symbol:'♒',desde:[1,20],hasta:[2,18]},{nombre:'Piscis',symbol:'♓',desde:[2,19],hasta:[3,20]},{nombre:'Aries',symbol:'♈',desde:[3,21],hasta:[4,19]},{nombre:'Tauro',symbol:'♉',desde:[4,20],hasta:[5,20]},{nombre:'Géminis',symbol:'♊',desde:[5,21],hasta:[6,20]},{nombre:'Cáncer',symbol:'♋',desde:[6,21],hasta:[7,22]},{nombre:'Leo',symbol:'♌',desde:[7,23],hasta:[8,22]},{nombre:'Virgo',symbol:'♍',desde:[8,23],hasta:[9,22]},{nombre:'Libra',symbol:'♎',desde:[9,23],hasta:[10,22]},{nombre:'Escorpio',symbol:'♏',desde:[10,23],hasta:[11,21]},{nombre:'Sagitario',symbol:'♐',desde:[11,22],hasta:[12,21]}];
 function getSigno(d){if(!d)return null;var dt=new Date(d+'T12:00:00'),mes=dt.getMonth()+1,dia=dt.getDate();for(var i=0;i<SIGNOS.length;i++){var s=SIGNOS[i],dm=s.desde[0],dd=s.desde[1],hm=s.hasta[0],hd=s.hasta[1];if(dm===hm){if(mes===dm&&dia>=dd&&dia<=hd)return s;}else{if((mes===dm&&dia>=dd)||(mes===hm&&dia<=hd))return s;}}return SIGNOS[0];}
 
-var data={userId:'',uid:'',nombre:'',titularNombre:'',mail:'',email:'',titularEmail:'',fecha_nacimiento:'',fechaNacimiento:'',idioma:'es-AR',religion:'',objetivos:[],metas:[],perfilCreado:false,requiereCalibracionVoz:true};
+var data={nombre:'',mail:'',fecha_nacimiento:'',idioma:'es-AR',religion:'',objetivos:[],metas:[]};
 
 function cargar(){
-  try{
-    var raw=localStorage.getItem('vistop_titular') || localStorage.getItem('vistop_usuario');
-    if(raw){
-      var saved=JSON.parse(raw);
-      data=datosTitularNormalizados({
-        userId:saved.userId || saved.uid || '',
-        nombre:saved.nombre || saved.titularNombre || '',
-        mail:saved.mail || saved.email || saved.titularEmail || '',
-        fecha_nacimiento:saved.fecha_nacimiento || saved.fechaNacimiento || '',
-        idioma:saved.idioma || 'es-AR',
-        religion:saved.religion || '',
-        objetivos:saved.objetivos || [],
-        metas:saved.metas || []
-      });
-      try{localStorage.setItem('vistop_titular',JSON.stringify(data));localStorage.setItem('vistop_usuario',JSON.stringify(data));}catch(e){}
-    }
-  }catch(e){}
+  try{var raw=localStorage.getItem('vistop_titular');if(raw){var saved=JSON.parse(raw);data.nombre=saved.nombre||'';data.mail=saved.mail||'';data.fecha_nacimiento=saved.fecha_nacimiento||'';data.idioma=saved.idioma||'es-AR';data.religion=saved.religion||'';data.objetivos=saved.objetivos||[];data.metas=saved.metas||[];}}catch(e){}
   document.getElementById('idioma').value=data.idioma||'es-AR';
   document.getElementById('nombre').value=data.nombre||'';
-  document.getElementById('mail').value=data.mail||data.email||'';
-  document.getElementById('fecha_nacimiento').value=data.fecha_nacimiento||data.fechaNacimiento||'';
+  document.getElementById('mail').value=data.mail||'';
+  document.getElementById('fecha_nacimiento').value=data.fecha_nacimiento||'';
   document.getElementById('religion').value=data.religion||'';
   renderItems('objetivos',data.objetivos||[]);
   renderItems('metas',data.metas||[]);
@@ -392,41 +328,12 @@ function cargar(){
 function guardar(){
   var n=document.getElementById('nombre').value.trim();
   if(!n){document.getElementById('nombre').focus();document.getElementById('nombre').style.borderColor='rgba(255,69,96,0.6)';setTimeout(function(){document.getElementById('nombre').style.borderColor='';},2000);return;}
-
-  var base={
-    userId:obtenerUserIdActual(),
-    nombre:n,
-    mail:document.getElementById('mail').value.trim(),
-    fecha_nacimiento:document.getElementById('fecha_nacimiento').value,
-    idioma:document.getElementById('idioma').value,
-    religion:document.getElementById('religion').value,
-    objetivos:leerItems('objetivos'),
-    metas:leerItems('metas')
-  };
-  data=datosTitularNormalizados(base);
-
-  try{
-    localStorage.setItem('vistop_titular',JSON.stringify(data));
-    localStorage.setItem('vistop_usuario',JSON.stringify(data));
-    localStorage.setItem('vistop_user',JSON.stringify(data));
-    localStorage.setItem('vistop_email',JSON.stringify(data.email || ''));
-    localStorage.setItem('vistop_titular_nombre',JSON.stringify(data.nombre || ''));
-    localStorage.setItem('vistop_perfil_creado','true');
-  }catch(e){}
-  try{
-    VISTOP.save('titular',data);
-    VISTOP.save('usuario',data);
-    VISTOP.save('user',data);
-    VISTOP.save('email',data.email || '');
-    VISTOP.save('titular_nombre',data.nombre || '');
-    VISTOP.save('perfil_creado',true);
-    VISTOP.save('requiere_calibracion_voz',true);
-  }catch(e){}
-
+  data.nombre=n;data.mail=document.getElementById('mail').value.trim();data.fecha_nacimiento=document.getElementById('fecha_nacimiento').value;data.idioma=document.getElementById('idioma').value;data.religion=document.getElementById('religion').value;data.objetivos=leerItems('objetivos');data.metas=leerItems('metas');
+  try{localStorage.setItem('vistop_titular',JSON.stringify(data));}catch(e){}try{VISTOP.save('titular',data);}catch(e){}
   var toast=document.getElementById('toast');toast.textContent=T[getLang()].saved;toast.classList.add('show');setTimeout(function(){toast.classList.remove('show');},2500);
   actualizarAvatar();document.getElementById('welcome-banner').style.display='none';
   try{window.parent.postMessage({type:'VISTOP_LANG_CHANGE'},'*');}catch(e){}
-  try{window.parent.postMessage({type:'VISTOP_TITULAR_SAVED', titular:data, userId:data.userId},'*');}catch(e){}
+  try{window.parent.postMessage({type:'VISTOP_TITULAR_SAVED'},'*');}catch(e){}
 }
 
 function actualizarAvatar(){var n=document.getElementById('nombre').value.trim(),m=document.getElementById('mail').value.trim(),t=T[getLang()]||T['es'];var init='';if(n){var p=n.split(' ');for(var i=0;i<Math.min(2,p.length);i++){if(p[i])init+=p[i][0].toUpperCase();}}document.getElementById('avatar-initials').textContent=init||'?';document.getElementById('avatar-name').textContent=n||t.name_ph;document.getElementById('avatar-sub').textContent=m||t.profile_ph;}
@@ -436,7 +343,9 @@ function buildItemRow(tipo,text){var t=T[getLang()]||T['es'];var row=document.cr
 function agregarItem(tipo){var l=document.getElementById(tipo+'-list'),row=buildItemRow(tipo,'');l.appendChild(row);row.querySelector('.item-input').focus();}
 function leerItems(tipo){var items=[],inputs=document.getElementById(tipo+'-list').querySelectorAll('.item-input');for(var i=0;i<inputs.length;i++){var v=inputs[i].value.trim();if(v)items.push(v);}return items;}
 
+/* ══ PIN ══ */
 var pinPaso=1,pinPrimero='',pinActual='';
+
 function abrirModalPin(){
   var t=T[getLang()]||T['es'];
   pinPaso=1;pinPrimero='';pinActual='';
@@ -449,10 +358,14 @@ function abrirModalPin(){
   actualizarPuntos();
   document.getElementById('pin-overlay').classList.add('abierto');
 }
+
 function cerrarModalPin(){document.getElementById('pin-overlay').classList.remove('abierto');}
+
 function actualizarPuntos(){for(var i=0;i<6;i++){var p=document.getElementById('pp'+i);if(i<pinActual.length){p.classList.add('lleno');}else{p.classList.remove('lleno');}}}
+
 function pinTecla(d){if(pinActual.length>=6)return;pinActual+=d;actualizarPuntos();document.getElementById('pin-modal-error').textContent='';if(pinActual.length===6)setTimeout(procesarPaso,150);}
 function pinBorrar(){pinActual=pinActual.slice(0,-1);actualizarPuntos();}
+
 function procesarPaso(){
   var t=T[getLang()]||T['es'];
   if(pinPaso===1){pinPrimero=pinActual;pinActual='';pinPaso=2;document.getElementById('pin-modal-paso').textContent=t.paso2;actualizarPuntos();}
@@ -461,6 +374,7 @@ function procesarPaso(){
     else{pinPaso=3;document.getElementById('pin-modal-paso').textContent=t.paso3;document.getElementById('sq-bloque').classList.add('visible');actualizarPuntos();}
   }
 }
+
 function guardarPinFinal(){
   var t=T[getLang()]||T['es'];
   var q=document.getElementById('sq-pregunta').value;
@@ -469,16 +383,15 @@ function guardarPinFinal(){
   if(!a||a.length<2){document.getElementById('pin-modal-error').textContent=t.sin_respuesta;return;}
   var qText=document.getElementById('sq-pregunta').options[document.getElementById('sq-pregunta').selectedIndex].text;
   localStorage.setItem('vistop_pin_hash', pinPrimero);
-  localStorage.setItem('vistop_pin', pinPrimero);
   localStorage.setItem('vistop_security_question', qText);
   localStorage.setItem('vistop_security_answer_hash', a);
-  try{VISTOP.save('pin',pinPrimero);VISTOP.save('pin_hash',pinPrimero);}catch(e){}
   cerrarModalPin();applyLang();
   var toast=document.getElementById('toast');toast.textContent=t.pin_guardado;toast.classList.add('show');
   setTimeout(function(){toast.classList.remove('show');},2500);
 }
 
 document.addEventListener('keydown',function(e){if(!document.getElementById('pin-overlay').classList.contains('abierto'))return;if(document.getElementById('sq-bloque').classList.contains('visible'))return;if(e.key>='0'&&e.key<='9')pinTecla(e.key);else if(e.key==='Backspace')pinBorrar();});
+
 window.addEventListener('message',function(event){
   if(event.data&&event.data.type==='VISTOP_LANG_CHANGE')setTimeout(function(){applyLang();},30);
   if(event.data&&event.data.type==='VISTOP_RESET_PIN')setTimeout(function(){abrirModalPin();},500);
